@@ -1,6 +1,7 @@
 package tdx
 
 import (
+	"encoding/hex"
 	"github.com/injoyai/base/maps/wait/v2"
 	"github.com/injoyai/conv"
 	"github.com/injoyai/ios"
@@ -88,6 +89,7 @@ func (this *Client) Connect() error {
 }
 
 // GetSecurityList 获取市场内指定范围内的所有证券代码
+// 0c02000000011a001a003e05050000000000000002000030303030303101363030303038
 func (this *Client) GetSecurityList() (*protocol.SecurityListResp, error) {
 
 	f := protocol.Frame{
@@ -95,8 +97,14 @@ func (this *Client) GetSecurityList() (*protocol.SecurityListResp, error) {
 		Type:    protocol.Connect,
 		Data:    nil,
 	}
+	_ = f
 
-	_, err := this.Write(f.Bytes())
+	bs, err := hex.DecodeString("0c02000000011a001a003e05050000000000000002000030303030303101363030303038")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = this.Write(bs)
 	return nil, err
 
 }
