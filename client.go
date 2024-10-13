@@ -88,7 +88,7 @@ func (this *Client) Connect() error {
 }
 
 // GetSecurityList 获取市场内指定范围内的所有证券代码
-func (this *Client) GetSecurityList() (*SecurityListResp, error) {
+func (this *Client) GetSecurityList() (*protocol.SecurityListResp, error) {
 
 	f := protocol.Frame{
 		Control: 0x01,
