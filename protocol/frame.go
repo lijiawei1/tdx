@@ -1,7 +1,9 @@
 package protocol
 
 import (
+	"compress/zlib"
 	"errors"
+	"fmt"
 	"github.com/injoyai/base/bytes"
 	"github.com/injoyai/base/g"
 	"github.com/injoyai/conv"
@@ -11,6 +13,9 @@ import (
 const (
 	// Prefix 固定帧头
 	Prefix = 0x0c
+
+	// PrefixResp 响应帧头
+	PrefixResp = 0xb1cb74
 )
 
 type Message interface {
@@ -29,8 +34,8 @@ Frame 数据帧
 */
 type Frame struct {
 	MsgID   uint32 //消息ID
-	Control uint8  //控制码，这个还不知道怎么定义
-	Type    uint16 //请求类型，如建立连接，请求分时数据等
+	Control uint8  //控制码,这个还不知道怎么定义
+	Type    uint16 //请求类型,如建立连接，请求分时数据等
 	Data    []byte //数据
 }
 
@@ -47,56 +52,88 @@ func (this *Frame) Bytes() g.Bytes {
 	return data
 }
 
-func Bytes(n any) []byte {
-	return bytes.Reverse(conv.Bytes(n))
+type Response struct {
+	Prefix    uint32 //未知,猜测是帧头
+	Control   uint8  //未知,猜测是响应的控制码
+	MsgID     uint32 //消息ID
+	I3        uint8  //未知,猜测是响应的控制码
+	Type      uint16 //响应类型,对应请求类型,如建立连接，请求分时数据等
+	ZipLength uint16 //数据长度
+	Length    uint16 //未压缩长度
+	Data      []byte //数据域
 }
 
-func Decode(bs []byte) (*Frame, error) {
-	if len(bs) < 10 {
+/*
+Decode
+b1cb7400 1c 00000000 00 0d00 5100 bd00 789c6378c1cecb252ace6066c5b4898987b9050ed1f90cc5b74c18a5bc18c1b43490fecff09c81819191f13fc3c9f3bb169f5e7dfefeb5ef57f7199a305009308208e5b32bb6bcbf70148712002d7f1e13
+*/
+func Decode(bs []byte) (*Response, error) {
+	if len(bs) < 16 {
 		return nil, errors.New("数据长度不足")
 	}
-	f := &Frame{}
+	resp := &Response{
+		Prefix:    Uint32(bs[:4]),
+		Control:   bs[4],
+		MsgID:     Uint32(bs[5:9]),
+		I3:        bs[9],
+		Type:      Uint16(bs[10:12]),
+		ZipLength: Uint16(bs[12:14]),
+		Length:    Uint16(bs[14:16]),
+		Data:      bs[16:],
+	}
 
-	return f, nil
+	if int(resp.ZipLength) != len(bs[16:]) {
+		return nil, fmt.Errorf("压缩数据长度不匹配,预期%d,得到%d", resp.ZipLength+16, len(bs))
+	}
+
+	r, err := zlib.NewReader(bytes.NewReader(resp.Data))
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	resp.Data, err = io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if int(resp.Length) != len(resp.Data) {
+		return nil, fmt.Errorf("解压数据长度不匹配,预期%d,得到%d", resp.Length, len(resp.Data))
+	}
+
+	return resp, nil
 }
 
 // ReadFrom 这里的r推荐传入*bufio.Reader
-func ReadFrom(r io.Reader) ([]byte, error) {
-	result := []byte(nil)
-	b := make([]byte, 1)
+func ReadFrom(r io.Reader) (result []byte, err error) {
+	prefix := make([]byte, 4)
 	for {
 		result = []byte(nil)
 
-		n, err := r.Read(b)
+		//读取帧头
+		_, err := io.ReadFull(r, prefix)
 		if err != nil {
 			return nil, err
 		}
-		if n == 0 || b[0] != Prefix {
+		if conv.Uint32(prefix) != PrefixResp {
 			continue
 		}
+		result = append(result, prefix...)
 
-		result = append(result, b[0])
-
-		//读取9字节 消息ID+控制码+2个字节长度
-		buf := make([]byte, 9)
-		n, err = r.Read(buf)
+		//读取12字节
+		buf := make([]byte, 12)
+		_, err = io.ReadFull(r, buf)
 		if err != nil {
 			return nil, err
-		}
-		if n != 9 {
-			continue
 		}
 		result = append(result, buf...)
 
 		//获取后续字节长度
-		length := uint16(result[9])<<8 + uint16(result[10])
+		length := uint16(result[11])<<8 + uint16(result[10])
 		buf = make([]byte, length)
-		n, err = r.Read(buf)
+		_, err = io.ReadFull(r, buf)
 		if err != nil {
 			return nil, err
-		}
-		if n != int(length) {
-			continue
 		}
 		result = append(result, buf...)
 

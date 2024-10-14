@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// Dial 与服务器建立连接
 func Dial(addr string, op ...client.Option) (*Client, error) {
 	c, err := dial.TCP(addr, func(c *client.Client) {
 		c.Logger.WithHEX() //以HEX显示
