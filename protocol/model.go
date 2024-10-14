@@ -40,3 +40,31 @@ func DecodeSecurityList(bs []byte) (*SecurityListResp, error) {
 	return nil, nil
 
 }
+
+func NewConnect() *Frame {
+	return &Frame{
+		Control: Control,
+		Type:    Connect,
+		Data:    []byte{0x01},
+	}
+}
+
+func NewSecurityQuotes(m map[Exchange]string) (*Frame, error) {
+	f := &Frame{
+		Control: Control,
+		Type:    SecurityQuote,
+		Data:    []byte{0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+	}
+
+	payload := Bytes(uint16(len(m)))
+	for k, v := range m {
+		if len(v) != 6 {
+			return nil, errors.New("股票代码长度错误")
+		}
+		payload = append(payload, k.Uint8())
+		payload = append(payload, v...)
+	}
+	f.Data = append(f.Data, payload...)
+
+	return f, nil
+}

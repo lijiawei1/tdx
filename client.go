@@ -80,11 +80,7 @@ func (this *Client) Close() error {
 }
 
 func (this *Client) Connect() error {
-	f := protocol.Frame{
-		Control: 0x01,
-		Type:    protocol.Connect,
-		Data:    []byte{0x01},
-	}
+	f := protocol.NewConnect()
 	_, err := this.Write(f.Bytes())
 	return err
 }
