@@ -9,7 +9,7 @@ func TestFrame_Bytes(t *testing.T) {
 	f := Frame{
 		MsgID:   1,
 		Control: 1,
-		Type:    Connect,
+		Type:    TypeConnect,
 		Data:    []byte{0x01},
 	}
 	hex := f.Bytes().HEX()
@@ -47,7 +47,7 @@ func TestDecode(t *testing.T) {
 
 	t.Log(string(UTF8ToGBK(resp.Data[68:])))
 
-	t.Log(DecodeConnect(resp.Data))
+	t.Log(MConnect.Decode(resp.Data))
 
 	//result, err := DecodeSecurityList(resp.Data)
 	//if err != nil {

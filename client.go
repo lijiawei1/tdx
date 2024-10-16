@@ -31,7 +31,11 @@ func Dial(addr string, op ...client.Option) (*Client, error) {
 		w: wait.New(time.Second * 2),
 	}
 
-	err = cli.Connect()
+	err = cli.connect()
+	if err != nil {
+		c.Close()
+		return nil, err
+	}
 
 	return cli, err
 }
@@ -55,7 +59,7 @@ type Client struct {
 	msgID uint32
 }
 
-func (this *Client) SendFrame(f protocol.Frame) (any, error) {
+func (this *Client) SendFrame(f *protocol.Frame) (any, error) {
 	this.msgID++
 	f.MsgID = this.msgID
 	if _, err := this.c.Write(f.Bytes()); err != nil {
@@ -79,8 +83,8 @@ func (this *Client) Close() error {
 	return this.c.Close()
 }
 
-func (this *Client) Connect() error {
-	f := protocol.NewConnect()
+func (this *Client) connect() error {
+	f := protocol.MConnect.Frame()
 	_, err := this.Write(f.Bytes())
 	return err
 }
@@ -91,7 +95,7 @@ func (this *Client) GetSecurityList() (*protocol.SecurityListResp, error) {
 
 	f := protocol.Frame{
 		Control: 0x01,
-		Type:    protocol.Connect,
+		Type:    protocol.TypeConnect,
 		Data:    nil,
 	}
 	_ = f
@@ -104,4 +108,17 @@ func (this *Client) GetSecurityList() (*protocol.SecurityListResp, error) {
 	_, err = this.Write(bs)
 	return nil, err
 
+}
+
+// GetSecurityQuotes 获取盘口五档报价
+func (this *Client) GetSecurityQuotes(m map[protocol.Exchange]string) (*protocol.SecurityQuotesResp, error) {
+	f, err := protocol.MSecurityQuote.Frame(m)
+	if err != nil {
+		return nil, err
+	}
+	result, err := this.SendFrame(f)
+	if err != nil {
+		return nil, err
+	}
+	return result.(*protocol.SecurityQuotesResp), nil
 }

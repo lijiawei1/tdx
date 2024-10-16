@@ -54,9 +54,9 @@ func (this *Frame) Bytes() g.Bytes {
 
 type Response struct {
 	Prefix    uint32 //未知,猜测是帧头
-	Control   uint8  //未知,猜测是响应的控制码
+	I2        uint8  //未知,猜测是响应的控制码
 	MsgID     uint32 //消息ID
-	I3        uint8  //未知,猜测是响应的控制码
+	Control   uint8  //未知,猜测是响应的控制码
 	Type      uint16 //响应类型,对应请求类型,如建立连接，请求分时数据等
 	ZipLength uint16 //数据长度
 	Length    uint16 //未压缩长度
@@ -73,9 +73,9 @@ func Decode(bs []byte) (*Response, error) {
 	}
 	resp := &Response{
 		Prefix:    Uint32(bs[:4]),
-		Control:   bs[4],
+		I2:        bs[4],
 		MsgID:     Uint32(bs[5:9]),
-		I3:        bs[9],
+		Control:   bs[9],
 		Type:      Uint16(bs[10:12]),
 		ZipLength: Uint16(bs[12:14]),
 		Length:    Uint16(bs[14:16]),
@@ -86,15 +86,17 @@ func Decode(bs []byte) (*Response, error) {
 		return nil, fmt.Errorf("压缩数据长度不匹配,预期%d,得到%d", resp.ZipLength+16, len(bs))
 	}
 
-	r, err := zlib.NewReader(bytes.NewReader(resp.Data))
-	if err != nil {
-		return nil, err
-	}
-	defer r.Close()
-
-	resp.Data, err = io.ReadAll(r)
-	if err != nil {
-		return nil, err
+	//进行数据解压
+	if resp.ZipLength != resp.Length {
+		r, err := zlib.NewReader(bytes.NewReader(resp.Data))
+		if err != nil {
+			return nil, err
+		}
+		defer r.Close()
+		resp.Data, err = io.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if int(resp.Length) != len(resp.Data) {

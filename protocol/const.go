@@ -7,6 +7,7 @@ func (this Exchange) Uint8() uint8 { return uint8(this) }
 const (
 	ExchangeSH Exchange = iota //上海交易所
 	ExchangeSZ                 //深圳交易所
+	ExchangeBJ                 //北京交易所
 )
 
 const (
@@ -14,9 +15,9 @@ const (
 )
 
 const (
-	Connect       = 0x000d //建立连接
-	Handshake     = 0xdb0f //握手
-	SecurityQuote = 0x053e // 行情信息
+	TypeConnect       = 0x000d //建立连接
+	TypeHandshake     = 0xdb0f //握手
+	TypeSecurityQuote = 0x053e // 行情信息
 )
 
 const (
