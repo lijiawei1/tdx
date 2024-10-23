@@ -34,7 +34,7 @@ func main() {
 	logs.PrintErr(err)
 
 	for _, v := range resp {
-		logs.Debug(*v)
+		logs.Debugf("%#v\n", v)
 	}
 
 	select {}
