@@ -13,35 +13,41 @@ import (
 )
 
 // Dial 与服务器建立连接
-func Dial(addr string, op ...client.Option) (*Client, error) {
-	c, err := dial.TCP(addr, func(c *client.Client) {
+func Dial(addr string, op ...client.Option) (cli *Client, err error) {
+
+	cli = &Client{
+		w: wait.New(time.Second * 2),
+	}
+
+	cli.c, err = dial.TCP(addr, func(c *client.Client) {
 		c.Logger.WithHEX() //以HEX显示
 		c.SetOption(op...) //自定义选项
 		//c.Event.OnReadFrom = protocol.ReadFrom     //分包
-		c.Event.OnDealMessage = handlerDealMessage //处理分包数据
+		c.Event.OnDealMessage = cli.handlerDealMessage //处理分包数据
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	go c.Run()
-
-	cli := &Client{
-		c: c,
-		w: wait.New(time.Second * 2),
-	}
+	go cli.c.Run()
 
 	err = cli.connect()
 	if err != nil {
-		c.Close()
+		cli.c.Close()
 		return nil, err
 	}
 
 	return cli, err
 }
 
+type Client struct {
+	c     *client.Client
+	w     *wait.Entity
+	msgID uint32
+}
+
 // handlerDealMessage 处理服务器响应的数据
-func handlerDealMessage(c *client.Client, msg ios.Acker) {
+func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 
 	f, err := protocol.Decode(msg.Payload())
 	if err != nil {
@@ -49,14 +55,18 @@ func handlerDealMessage(c *client.Client, msg ios.Acker) {
 		return
 	}
 
+	logs.Debug(f.Type)
+	switch f.Type {
+	case protocol.TypeSecurityQuote:
+		resp := protocol.MSecurityQuote.Decode(f.Data)
+		logs.Debug(resp)
+		this.w.Done(conv.String(f.MsgID), resp)
+		return
+
+	}
+
 	_ = f
 
-}
-
-type Client struct {
-	c     *client.Client
-	w     *wait.Entity
-	msgID uint32
 }
 
 func (this *Client) SendFrame(f *protocol.Frame) (any, error) {
@@ -111,7 +121,7 @@ func (this *Client) GetSecurityList() (*protocol.SecurityListResp, error) {
 }
 
 // GetSecurityQuotes 获取盘口五档报价
-func (this *Client) GetSecurityQuotes(m map[protocol.Exchange]string) (*protocol.SecurityQuotesResp, error) {
+func (this *Client) GetSecurityQuotes(m map[protocol.Exchange]string) (protocol.SecurityQuotesResp, error) {
 	f, err := protocol.MSecurityQuote.Frame(m)
 	if err != nil {
 		return nil, err
@@ -120,5 +130,5 @@ func (this *Client) GetSecurityQuotes(m map[protocol.Exchange]string) (*protocol
 	if err != nil {
 		return nil, err
 	}
-	return result.(*protocol.SecurityQuotesResp), nil
+	return result.(protocol.SecurityQuotesResp), nil
 }
