@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"bytes"
+	"fmt"
 	bytes2 "github.com/injoyai/base/bytes"
 	"github.com/injoyai/conv"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -32,41 +33,24 @@ func UTF8ToGBK(text []byte) []byte {
 	return bytes.ReplaceAll(content, []byte{0x00}, []byte{})
 }
 
-func getprice(b []byte, pos *int) int {
-	/*
-		    0x7f与常量做与运算实质是保留常量（转换为二进制形式）的后7位数，既取值区间为[0,127]
-		    0x3f与常量做与运算实质是保留常量（转换为二进制形式）的后6位数，既取值区间为[0,63]
-
-			0x80 1000 0000
-			0x7f 0111 1111
-			0x40  100 0000
-			0x3f  011 1111
-	*/
-	posByte := 6
-	bData := b[*pos]
-	data := int(bData & 0x3f)
-	bSign := false
-	if (bData & 0x40) > 0 {
-		bSign = true
+func FloatUnit(f float64) (float64, string) {
+	m := []string{"万", "亿"}
+	unit := ""
+	for i := 0; f > 1e4 && i < len(m); f /= 1e4 {
+		unit = m[i]
 	}
+	return f, unit
+}
 
-	if (bData & 0x80) > 0 {
-		for {
-			*pos += 1
-			bData = b[*pos]
-			data += (int(bData&0x7f) << posByte)
-
-			posByte += 7
-
-			if (bData & 0x80) <= 0 {
-				break
-			}
-		}
+func FloatUnitString(f float64) string {
+	m := []string{"万", "亿"}
+	unit := ""
+	for i := 0; f > 1e4 && i < len(m); f /= 1e4 {
+		unit = m[i]
 	}
-	*pos++
+	return fmt.Sprintf("%0.2f%s", f, unit)
+}
 
-	if bSign {
-		data = -data
-	}
-	return data
+func IntUnitString(n int) string {
+	return FloatUnitString(float64(n))
 }

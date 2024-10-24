@@ -17,8 +17,8 @@ func (this Price) String() string {
 }
 
 type PriceLevel struct {
-	Price Price
-	Vol   int
+	Price Price //价
+	Vol   int   //量，是否是成交量？
 }
 
 // K k线图
@@ -28,6 +28,10 @@ type K struct {
 	High  Price //今日最高价
 	Low   Price //今日最低价
 	Close Price //今日收盘价
+}
+
+func (this K) String() string {
+	return fmt.Sprintf("昨收:%0.2f, 今开:%0.2f, 最高:%0.2f, 最低:%0.2f, 今收:%0.2f", this.Last.Float64(), this.Open.Float64(), this.High.Float64(), this.Low.Float64(), this.Close.Float64())
 }
 
 func DecodeK(bs []byte) ([]byte, K) {

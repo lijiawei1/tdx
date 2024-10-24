@@ -3,7 +3,7 @@ package protocol
 import (
 	"errors"
 	"fmt"
-	bytes2 "github.com/injoyai/base/bytes"
+	"strings"
 )
 
 var (
@@ -85,27 +85,30 @@ func (securityList) Decode(bs []byte) (*SecurityListResp, error) {
 
 type SecurityQuotesResp []*SecurityQuote
 
-type SecurityQuote struct {
-	Market  uint8  // 市场
-	Code    string // 代码
-	Active1 uint16 // 活跃度
-	//Price   float64 // 现价
-	//Close   float64 // 昨收
-	//Open    float64 // 开盘
-	//High    float64 // 最高
-	//Low     float64 // 最低
-	K K //k线
+func (this SecurityQuotesResp) String() string {
+	ls := []string(nil)
+	for _, v := range this {
+		ls = append(ls, v.String())
+	}
+	return strings.Join(ls, "\n")
+}
 
-	ServerTime     string  // 时间
-	ReversedBytes0 int     // 保留(时间 ServerTime)
-	ReversedBytes1 int     // 保留
-	Vol            int     // 总量
-	CurVol         int     // 现量
-	Amount         float64 // 总金额
-	SVol           int     // 内盘
-	BVol           int     // 外盘
-	ReversedBytes2 int     // 保留
-	ReversedBytes3 int     // 保留
+type SecurityQuote struct {
+	Exchange       Exchange // 市场
+	Code           string   // 代码
+	Active1        uint16   // 活跃度
+	K              K        //k线
+	ServerTime     string   // 时间
+	ReversedBytes0 int      // 保留(时间 ServerTime)
+	ReversedBytes1 int      // 保留
+	TotalHand      int      // 总手（东财的盘口-总手）
+	Intuition      int      // 现量（东财的盘口-现量）
+	Amount         float64  // 金额（东财的盘口-金额）
+	InsideDish     int      // 内盘（东财的盘口-外盘）（和东财对不上）
+	OuterDisc      int      // 外盘（东财的盘口-外盘）（和东财对不上）
+
+	ReversedBytes2 int // 保留
+	ReversedBytes3 int // 保留
 	BidLevels      [5]PriceLevel
 	AskLevels      [5]PriceLevel
 	Bid1           float64
@@ -136,6 +139,13 @@ type SecurityQuote struct {
 	ReversedBytes9 uint16  // 保留
 	Rate           float64 // 涨速
 	Active2        uint16  // 活跃度
+}
+
+func (this *SecurityQuote) String() string {
+	return this.K.String() + fmt.Sprintf(", 总量：%s, 现量：%s, 总金额：%s, 内盘：%s, 外盘：%s",
+		IntUnitString(this.TotalHand), IntUnitString(this.Intuition), FloatUnitString(this.Amount),
+		IntUnitString(this.InsideDish), IntUnitString(this.OuterDisc)) + "\n" +
+		fmt.Sprintf("%#v\n", this)
 }
 
 type securityQuote struct{}
@@ -176,34 +186,36 @@ func (this securityQuote) Decode(bs []byte) SecurityQuotesResp {
 
 	for i := uint16(0); i < number; i++ {
 		sec := &SecurityQuote{
-			Market:  bs[0],
-			Code:    string(UTF8ToGBK(bytes2.Reverse(bs[1:7]))),
-			Active1: Uint16(bs[7:9]),
+			Exchange: Exchange(bs[0]),
+			Code:     string(UTF8ToGBK(bs[1:7])),
+			Active1:  Uint16(bs[7:9]),
 		}
 		bs, sec.K = DecodeK(bs[9:])
 		bs, sec.ReversedBytes0 = CutInt(bs)
 		sec.ServerTime = fmt.Sprintf("%d", sec.ReversedBytes0)
 		bs, sec.ReversedBytes1 = CutInt(bs)
-		bs, sec.Vol = CutInt(bs)
-		bs, sec.CurVol = CutInt(bs)
+		bs, sec.TotalHand = CutInt(bs)
+		bs, sec.Intuition = CutInt(bs)
 		sec.Amount = getVolume(Uint32(bs[:4]))
-		bs, sec.SVol = CutInt(bs[4:])
-		bs, sec.BVol = CutInt(bs)
+		bs, sec.InsideDish = CutInt(bs[4:])
+		bs, sec.OuterDisc = CutInt(bs)
 		bs, sec.ReversedBytes2 = CutInt(bs)
 		bs, sec.ReversedBytes3 = CutInt(bs)
 
 		var p Price
 		for i := 0; i < 5; i++ {
 			bidele := PriceLevel{}
+			offerele := PriceLevel{}
+
 			bs, p = GetPrice(bs)
 			bidele.Price = p + sec.K.Close
-			bs, bidele.Vol = CutInt(bs)
-			sec.BidLevels[i] = bidele
-
-			offerele := PriceLevel{}
 			bs, p = GetPrice(bs)
 			offerele.Price = p + sec.K.Close
+
+			bs, bidele.Vol = CutInt(bs)
 			bs, offerele.Vol = CutInt(bs)
+
+			sec.BidLevels[i] = bidele
 			sec.AskLevels[i] = offerele
 		}
 

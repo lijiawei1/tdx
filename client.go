@@ -55,7 +55,6 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 		return
 	}
 
-	logs.Debug(f.Type)
 	switch f.Type {
 	case protocol.TypeSecurityQuote:
 		resp := protocol.MSecurityQuote.Decode(f.Data)
