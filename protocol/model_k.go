@@ -17,9 +17,11 @@ func (this Price) String() string {
 }
 
 type PriceLevel struct {
-	Price Price //价
-	Vol   int   //量，是否是成交量？
+	Price  Price //价 想买卖的价格
+	Number int   //量 想买卖的数量
 }
+
+type PriceLevels [5]PriceLevel
 
 // K k线图
 type K struct {
@@ -34,25 +36,26 @@ func (this K) String() string {
 	return fmt.Sprintf("昨收:%0.2f, 今开:%0.2f, 最高:%0.2f, 最低:%0.2f, 今收:%0.2f", this.Last.Float64(), this.Open.Float64(), this.High.Float64(), this.Low.Float64(), this.Close.Float64())
 }
 
+// DecodeK 一般是占用6字节
 func DecodeK(bs []byte) ([]byte, K) {
 	k := K{}
 
-	//当日收盘价
+	//当日收盘价，一般2字节
 	bs, k.Close = GetPrice(bs)
 
-	//前日收盘价
+	//前日收盘价，一般1字节
 	bs, k.Last = GetPrice(bs)
 	k.Last += k.Close
 
-	//当日开盘价
+	//当日开盘价，一般1字节
 	bs, k.Open = GetPrice(bs)
 	k.Open += k.Close
 
-	//当日最高价
+	//当日最高价，一般1字节
 	bs, k.High = GetPrice(bs)
 	k.High += k.Close
 
-	//当日最低价
+	//当日最低价，一般1字节
 	bs, k.Low = GetPrice(bs)
 	k.Low += k.Close
 

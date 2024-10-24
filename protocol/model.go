@@ -1,8 +1,10 @@
 package protocol
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/injoyai/logs"
 	"strings"
 )
 
@@ -95,7 +97,7 @@ func (this SecurityQuotesResp) String() string {
 
 type SecurityQuote struct {
 	Exchange       Exchange // 市场
-	Code           string   // 代码
+	Code           string   // 股票代码 6个ascii字符串
 	Active1        uint16   // 活跃度
 	K              K        //k线
 	ServerTime     string   // 时间
@@ -107,37 +109,18 @@ type SecurityQuote struct {
 	InsideDish     int      // 内盘（东财的盘口-外盘）（和东财对不上）
 	OuterDisc      int      // 外盘（东财的盘口-外盘）（和东财对不上）
 
-	ReversedBytes2 int // 保留
-	ReversedBytes3 int // 保留
-	BidLevels      [5]PriceLevel
-	AskLevels      [5]PriceLevel
-	Bid1           float64
-	Ask1           float64
-	BidVol1        int
-	AskVol1        int
-	Bid2           float64
-	Ask2           float64
-	BidVol2        int
-	AskVol2        int
-	Bid3           float64
-	Ask3           float64
-	BidVol3        int
-	AskVol3        int
-	Bid4           float64
-	Ask4           float64
-	BidVol4        int
-	AskVol4        int
-	Bid5           float64
-	Ask5           float64
-	BidVol5        int
-	AskVol5        int
-	ReversedBytes4 uint16  // 保留
-	ReversedBytes5 int     // 保留
-	ReversedBytes6 int     // 保留
-	ReversedBytes7 int     // 保留
-	ReversedBytes8 int     // 保留
-	ReversedBytes9 uint16  // 保留
-	Rate           float64 // 涨速
+	ReversedBytes2 int           // 保留，未知
+	ReversedBytes3 int           // 保留，未知
+	BuyLevel       [5]PriceLevel // 5档买盘(买1-5)
+	SellLevel      [5]PriceLevel // 5档卖盘(卖1-5)
+
+	ReversedBytes4 uint16  // 保留，未知
+	ReversedBytes5 int     // 保留，未知
+	ReversedBytes6 int     // 保留，未知
+	ReversedBytes7 int     // 保留，未知
+	ReversedBytes8 int     // 保留，未知
+	ReversedBytes9 uint16  // 保留，未知
+	Rate           float64 // 涨速，好像都是0
 	Active2        uint16  // 活跃度
 }
 
@@ -172,9 +155,32 @@ func (this securityQuote) Frame(m map[Exchange]string) (*Frame, error) {
 
 /*
 Decode
-b1cb74000c02000000003e05af00af000136020000303030303031320bb2124c56105987e6d10cf212b78fa801ae01293dc54e8bd740acb8670086ca1e0001af36ba0c4102b467b6054203a68a0184094304891992114405862685108d0100000000e8ff320b0136303030303859098005464502468defd10cc005bed2668e05be15804d8ba12cb3b13a0083c3034100badc029d014201bc990384f70443029da503b7af074403a6e501b9db044504a6e2028dd5048d050000000000005909
+0136
+0200  数量
+00  交易所
+303030303031 股票代码
+320b 活跃度？
+b212 昨天收盘价1186
+4c
+56
+10
+59
+87e6d10cf212b78fa801ae01293dc54e8bd740acb8670086ca1e0001af36ba0c4102b467b6054203a68a0184094304891992114405862685108d0100000000e8ff320b
+
+01 深圳交易所
+363030303038 股票代码
+5909
+8005
+46
+45
+02
+46
+8defd10c 服务时间
+c005bed2668e05be15804d8ba12cb3b13a0083c3034100badc029d014201bc990384f70443029da503b7af074403a6e501b9db044504a6e2028dd5048d050000000000005909
 */
 func (this securityQuote) Decode(bs []byte) SecurityQuotesResp {
+
+	logs.Debug(hex.EncodeToString(bs))
 
 	resp := SecurityQuotesResp{}
 
@@ -204,19 +210,19 @@ func (this securityQuote) Decode(bs []byte) SecurityQuotesResp {
 
 		var p Price
 		for i := 0; i < 5; i++ {
-			bidele := PriceLevel{}
-			offerele := PriceLevel{}
+			buyLevel := PriceLevel{}
+			sellLevel := PriceLevel{}
 
 			bs, p = GetPrice(bs)
-			bidele.Price = p + sec.K.Close
+			buyLevel.Price = p + sec.K.Close
 			bs, p = GetPrice(bs)
-			offerele.Price = p + sec.K.Close
+			sellLevel.Price = p + sec.K.Close
 
-			bs, bidele.Vol = CutInt(bs)
-			bs, offerele.Vol = CutInt(bs)
+			bs, buyLevel.Number = CutInt(bs)
+			bs, sellLevel.Number = CutInt(bs)
 
-			sec.BidLevels[i] = bidele
-			sec.AskLevels[i] = offerele
+			sec.BuyLevel[i] = buyLevel
+			sec.SellLevel[i] = sellLevel
 		}
 
 		sec.ReversedBytes4 = Uint16(bs[:2])
@@ -228,6 +234,8 @@ func (this securityQuote) Decode(bs []byte) SecurityQuotesResp {
 
 		sec.Rate = float64(sec.ReversedBytes9) / 100
 		sec.Active2 = Uint16(bs[2:4])
+
+		bs = bs[4:]
 
 		resp = append(resp, sec)
 	}
