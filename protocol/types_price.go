@@ -13,15 +13,31 @@ func (this Price) Float64() float64 {
 }
 
 func (this Price) String() string {
-	return fmt.Sprintf("%0.2f 元", this.Float64())
+	return fmt.Sprintf("%0.2f元", this.Float64())
 }
 
 type PriceLevel struct {
+	Buy    bool  //买卖
 	Price  Price //价 想买卖的价格
 	Number int   //量 想买卖的数量
 }
 
 type PriceLevels [5]PriceLevel
+
+func (this PriceLevels) String() string {
+	s := ""
+	if this[0].Buy {
+		for i, v := range this {
+			s += fmt.Sprintf("买%d  %s  %s\n", i+1, v.Price, IntUnitString(v.Number))
+		}
+
+	} else {
+		for i := 4; i >= 0; i-- {
+			s += fmt.Sprintf("卖%d  %s  %s\n", i+1, this[i].Price, IntUnitString(this[i].Number))
+		}
+	}
+	return s
+}
 
 // K k线图
 type K struct {
@@ -33,7 +49,7 @@ type K struct {
 }
 
 func (this K) String() string {
-	return fmt.Sprintf("昨收:%0.2f, 今开:%0.2f, 最高:%0.2f, 最低:%0.2f, 今收:%0.2f", this.Last.Float64(), this.Open.Float64(), this.High.Float64(), this.Low.Float64(), this.Close.Float64())
+	return fmt.Sprintf("昨收:%s, 今开:%s, 最高:%s, 最低:%s, 今收:%s", this.Last, this.Open, this.High, this.Low, this.Close)
 }
 
 // DecodeK 一般是占用6字节

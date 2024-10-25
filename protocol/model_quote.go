@@ -1,10 +1,8 @@
 package protocol
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/injoyai/logs"
 	"strings"
 )
 
@@ -109,10 +107,10 @@ type SecurityQuote struct {
 	InsideDish     int      // 内盘（东财的盘口-外盘）（和东财对不上）
 	OuterDisc      int      // 外盘（东财的盘口-外盘）（和东财对不上）
 
-	ReversedBytes2 int           // 保留，未知
-	ReversedBytes3 int           // 保留，未知
-	BuyLevel       [5]PriceLevel // 5档买盘(买1-5)
-	SellLevel      [5]PriceLevel // 5档卖盘(卖1-5)
+	ReversedBytes2 int         // 保留，未知
+	ReversedBytes3 int         // 保留，未知
+	BuyLevel       PriceLevels // 5档买盘(买1-5)
+	SellLevel      PriceLevels // 5档卖盘(卖1-5)
 
 	ReversedBytes4 uint16  // 保留，未知
 	ReversedBytes5 int     // 保留，未知
@@ -125,10 +123,16 @@ type SecurityQuote struct {
 }
 
 func (this *SecurityQuote) String() string {
-	return this.K.String() + fmt.Sprintf(", 总量：%s, 现量：%s, 总金额：%s, 内盘：%s, 外盘：%s",
-		IntUnitString(this.TotalHand), IntUnitString(this.Intuition), FloatUnitString(this.Amount),
-		IntUnitString(this.InsideDish), IntUnitString(this.OuterDisc)) + "\n" +
-		fmt.Sprintf("%#v\n", this)
+	return fmt.Sprintf(`%s%s
+%s
+总量：%s, 现量：%s, 总金额：%s, 内盘：%s, 外盘：%s
+%s%s
+`,
+		this.Exchange.String(), this.Code, this.K,
+		IntUnitString(this.TotalHand), IntUnitString(this.Intuition),
+		FloatUnitString(this.Amount), IntUnitString(this.InsideDish), IntUnitString(this.OuterDisc),
+		this.SellLevel.String(), this.BuyLevel.String(),
+	)
 }
 
 type securityQuote struct{}
@@ -180,7 +184,7 @@ c005bed2668e05be15804d8ba12cb3b13a0083c3034100badc029d014201bc990384f70443029da5
 */
 func (this securityQuote) Decode(bs []byte) SecurityQuotesResp {
 
-	logs.Debug(hex.EncodeToString(bs))
+	//logs.Debug(hex.EncodeToString(bs))
 
 	resp := SecurityQuotesResp{}
 
@@ -210,7 +214,7 @@ func (this securityQuote) Decode(bs []byte) SecurityQuotesResp {
 
 		var p Price
 		for i := 0; i < 5; i++ {
-			buyLevel := PriceLevel{}
+			buyLevel := PriceLevel{Buy: true}
 			sellLevel := PriceLevel{}
 
 			bs, p = GetPrice(bs)

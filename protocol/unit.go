@@ -48,6 +48,9 @@ func FloatUnitString(f float64) string {
 	for i := 0; f > 1e4 && i < len(m); f /= 1e4 {
 		unit = m[i]
 	}
+	if unit == "" {
+		return conv.String(f)
+	}
 	return fmt.Sprintf("%0.2f%s", f, unit)
 }
 
