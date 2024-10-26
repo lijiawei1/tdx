@@ -3,13 +3,14 @@ package protocol
 import (
 	"errors"
 	"fmt"
+	"github.com/injoyai/conv"
 	"strings"
 )
 
 var (
 	MConnect       = connect{}
 	MSecurityQuote = securityQuote{}
-	SecurityList   = securityList{}
+	MSecurityList  = securityList{}
 )
 
 type ConnectResp struct {
@@ -20,7 +21,7 @@ type connect struct{}
 
 func (connect) Frame() *Frame {
 	return &Frame{
-		Control: Control,
+		Control: Control01,
 		Type:    TypeConnect,
 		Data:    []byte{0x01},
 	}
@@ -55,11 +56,12 @@ type Security struct {
 
 type securityList struct{}
 
-func (securityList) Frame() *Frame {
+func (securityList) Frame(exchange Exchange, starts ...uint16) *Frame {
+	start := conv.DefaultUint16(0, starts...)
 	return &Frame{
-		Control: 0x01,
-		Type:    TypeConnect,
-		Data:    nil,
+		Control: Control01,
+		Type:    TypeSecurityList,
+		Data:    []byte{exchange.Uint8(), 0x0, uint8(start), uint8(start >> 8)},
 	}
 }
 
@@ -69,11 +71,23 @@ func (securityList) Decode(bs []byte) (*SecurityListResp, error) {
 		return nil, errors.New("数据长度不足")
 	}
 
-	count := Uint16(bs[:2])
+	resp := &SecurityListResp{
+		Count: Uint16(bs[:2]),
+	}
+	bs = bs[2:]
 
-	_ = count
+	for i := uint16(0); i < resp.Count; i++ {
+		sec := &Security{
+			Code:     String(bs[:6]),
+			VolUnit:  Uint16(bs[6:8]),
+			Name:     string(UTF8ToGBK(bs[8:16])),
+			PreClose: getVolume(Uint32(bs[16:20])),
+		}
+		bs = bs[20:]
+		resp.List = append(resp.List, sec)
+	}
 
-	return nil, nil
+	return resp, nil
 
 }
 
@@ -139,7 +153,7 @@ type securityQuote struct{}
 
 func (this securityQuote) Frame(m map[Exchange]string) (*Frame, error) {
 	f := &Frame{
-		Control: Control,
+		Control: Control01,
 		Type:    TypeSecurityQuote,
 		Data:    []byte{0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	}

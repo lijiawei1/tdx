@@ -1,5 +1,15 @@
 package protocol
 
+type Control uint8
+
+func (this Control) Uint8() uint8 {
+	return uint8(this)
+}
+
+const (
+	Control01 Control = 0x01 //好像都是01，暂时不知道啥含义
+)
+
 type Exchange uint8
 
 func (this Exchange) Uint8() uint8 { return uint8(this) }

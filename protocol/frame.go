@@ -7,6 +7,7 @@ import (
 	"github.com/injoyai/base/bytes"
 	"github.com/injoyai/base/g"
 	"github.com/injoyai/conv"
+	"github.com/injoyai/logs"
 	"io"
 )
 
@@ -33,10 +34,10 @@ Frame 数据帧
 0c0100000001030003000d0001
 */
 type Frame struct {
-	MsgID   uint32 //消息ID
-	Control uint8  //控制码,这个还不知道怎么定义
-	Type    uint16 //请求类型,如建立连接，请求分时数据等
-	Data    []byte //数据
+	MsgID   uint32  //消息ID
+	Control Control //控制码,这个还不知道怎么定义
+	Type    uint16  //请求类型,如建立连接，请求分时数据等
+	Data    []byte  //数据
 }
 
 func (this *Frame) Bytes() g.Bytes {
@@ -44,7 +45,7 @@ func (this *Frame) Bytes() g.Bytes {
 	data := make([]byte, 12+len(this.Data))
 	data[0] = Prefix
 	copy(data[1:], Bytes(this.MsgID))
-	data[5] = this.Control
+	data[5] = this.Control.Uint8()
 	copy(data[6:], Bytes(length))
 	copy(data[8:], Bytes(length))
 	copy(data[10:], Bytes(this.Type))
@@ -108,6 +109,7 @@ func Decode(bs []byte) (*Response, error) {
 
 // ReadFrom 这里的r推荐传入*bufio.Reader
 func ReadFrom(r io.Reader) (result []byte, err error) {
+	logs.Debug("ReadFrom")
 	prefix := make([]byte, 4)
 	for {
 		result = []byte(nil)
@@ -132,6 +134,7 @@ func ReadFrom(r io.Reader) (result []byte, err error) {
 
 		//获取后续字节长度
 		length := uint16(result[11])<<8 + uint16(result[10])
+		logs.Debug("长度：", length)
 		buf = make([]byte, length)
 		_, err = io.ReadFull(r, buf)
 		if err != nil {

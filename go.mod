@@ -8,6 +8,7 @@ require (
 	github.com/injoyai/goutil v0.0.0-20241009040015-3d20afe3efe6
 	github.com/injoyai/ios v0.0.3
 	github.com/injoyai/logs v1.0.9
+	golang.org/x/text v0.16.0
 )
 
 require (
@@ -59,7 +60,6 @@ require (
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
 	google.golang.org/genproto v0.0.0-20221201204527-e3fa12d562f3 // indirect
 	google.golang.org/grpc v1.50.1 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect

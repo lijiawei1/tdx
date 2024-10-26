@@ -1,12 +1,9 @@
 package protocol
 
 const (
-	Control = 0x01
-)
-
-const (
 	TypeConnect       = 0x000d //建立连接
 	TypeHandshake     = 0xdb0f //握手
+	TypeSecurityList  = 0x0450 //获取股票代码
 	TypeSecurityQuote = 0x053e // 行情信息
 )
 

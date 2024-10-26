@@ -1,7 +1,6 @@
 package tdx
 
 import (
-	"encoding/hex"
 	"github.com/injoyai/base/maps/wait/v2"
 	"github.com/injoyai/conv"
 	"github.com/injoyai/ios"
@@ -22,13 +21,18 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 	cli.c, err = dial.TCP(addr, func(c *client.Client) {
 		c.Logger.WithHEX() //以HEX显示
 		c.SetOption(op...) //自定义选项
-		//c.Event.OnReadFrom = protocol.ReadFrom     //分包
+		//c.AllReader = ios.NewAllReader(c.Reader.(io.Reader), protocol.ReadFrom) //分包
+		c.Event.OnReadFrom = protocol.ReadFrom         //分包
 		c.Event.OnDealMessage = cli.handlerDealMessage //处理分包数据
+
+		logs.Debug("option")
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	logs.Debug("run")
+	logs.Debugf("%#v\n", cli.c.Event.OnReadFrom)
 	go cli.c.Run()
 
 	err = cli.connect()
@@ -55,16 +59,23 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 		return
 	}
 
+	var resp any
 	switch f.Type {
 	case protocol.TypeSecurityQuote:
-		resp := protocol.MSecurityQuote.Decode(f.Data)
-		logs.Debug(resp)
-		this.w.Done(conv.String(f.MsgID), resp)
-		return
+		resp = protocol.MSecurityQuote.Decode(f.Data)
+
+	case protocol.TypeSecurityList:
+		resp, err = protocol.MSecurityList.Decode(f.Data)
 
 	}
 
-	_ = f
+	if err != nil {
+		logs.Err(err)
+		return
+	}
+
+	logs.Debug(resp)
+	this.w.Done(conv.String(f.MsgID), resp)
 
 }
 
@@ -77,6 +88,7 @@ func (this *Client) SendFrame(f *protocol.Frame) (any, error) {
 	return this.w.Wait(conv.String(this.msgID))
 }
 
+// Send 向服务发送数据，并等待响应数据
 func (this *Client) Send(bs []byte) (any, error) {
 	if _, err := this.c.Write(bs); err != nil {
 		return nil, err
@@ -84,6 +96,7 @@ func (this *Client) Send(bs []byte) (any, error) {
 	return this.w.Wait(conv.String(this.msgID))
 }
 
+// Write 实现io.Writer,向服务器写入数据
 func (this *Client) Write(bs []byte) (int, error) {
 	return this.c.Write(bs)
 }
@@ -99,23 +112,13 @@ func (this *Client) connect() error {
 }
 
 // GetSecurityList 获取市场内指定范围内的所有证券代码
-// 0c02000000011a001a003e05050000000000000002000030303030303101363030303038
-func (this *Client) GetSecurityList() (*protocol.SecurityListResp, error) {
-
-	f := protocol.Frame{
-		Control: 0x01,
-		Type:    protocol.TypeConnect,
-		Data:    nil,
-	}
-	_ = f
-
-	bs, err := hex.DecodeString("0c02000000011a001a003e05050000000000000002000030303030303101363030303038")
+func (this *Client) GetSecurityList(exchange protocol.Exchange, starts ...uint16) (*protocol.SecurityListResp, error) {
+	f := protocol.MSecurityList.Frame(exchange, starts...)
+	result, err := this.SendFrame(f)
 	if err != nil {
 		return nil, err
 	}
-
-	_, err = this.Write(bs)
-	return nil, err
+	return result.(*protocol.SecurityListResp), nil
 
 }
 
