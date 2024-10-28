@@ -23,6 +23,12 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 		c.SetOption(op...)                             //自定义选项
 		c.Event.OnReadFrom = protocol.ReadFrom         //分包
 		c.Event.OnDealMessage = cli.handlerDealMessage //处理分包数据
+		//无数据超时时间是60秒
+		c.GoTimerWriter(30*time.Second, func(w ios.MoreWriter) error {
+			bs := protocol.MHeart.Frame().Bytes()
+			_, err := w.Write(bs)
+			return err
+		})
 	})
 	if err != nil {
 		return nil, err
@@ -45,6 +51,11 @@ type Client struct {
 	msgID uint32
 }
 
+// Done 连接关闭
+func (this *Client) Done() <-chan struct{} {
+	return this.c.Done()
+}
+
 // handlerDealMessage 处理服务器响应的数据
 func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 
@@ -56,11 +67,17 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 
 	var resp any
 	switch f.Type {
-	case protocol.TypeSecurityQuote:
+
+	case protocol.TypeConnect:
+
+	case protocol.TypeStockList:
+		resp, err = protocol.MStockList.Decode(f.Data)
+
+	case protocol.TypeStockQuote:
 		resp = protocol.MStockQuote.Decode(f.Data)
 
-	case protocol.TypeSecurityList:
-		resp, err = protocol.MStockList.Decode(f.Data)
+	case protocol.TypeStockMinute:
+		resp, err = protocol.MStockMinute.Decode(f.Data)
 
 	}
 
@@ -82,14 +99,6 @@ func (this *Client) SendFrame(f *protocol.Frame) (any, error) {
 	return this.w.Wait(conv.String(this.msgID))
 }
 
-// Send 向服务发送数据，并等待响应数据
-func (this *Client) Send(bs []byte) (any, error) {
-	if _, err := this.c.Write(bs); err != nil {
-		return nil, err
-	}
-	return this.w.Wait(conv.String(this.msgID))
-}
-
 // Write 实现io.Writer,向服务器写入数据
 func (this *Client) Write(bs []byte) (int, error) {
 	return this.c.Write(bs)
@@ -105,19 +114,18 @@ func (this *Client) connect() error {
 	return err
 }
 
-// GetSecurityList 获取市场内指定范围内的所有证券代码
-func (this *Client) GetSecurityList(exchange protocol.Exchange, starts ...uint16) (*protocol.StockListResp, error) {
+// GetStockList 获取市场内指定范围内的所有证券代码
+func (this *Client) GetStockList(exchange protocol.Exchange, starts ...uint16) (*protocol.StockListResp, error) {
 	f := protocol.MStockList.Frame(exchange, starts...)
 	result, err := this.SendFrame(f)
 	if err != nil {
 		return nil, err
 	}
 	return result.(*protocol.StockListResp), nil
-
 }
 
-// GetSecurityQuotes 获取盘口五档报价
-func (this *Client) GetSecurityQuotes(m map[protocol.Exchange]string) (protocol.StockQuotesResp, error) {
+// GetStockQuotes 获取盘口五档报价
+func (this *Client) GetStockQuotes(m map[protocol.Exchange]string) (protocol.StockQuotesResp, error) {
 	f, err := protocol.MStockQuote.Frame(m)
 	if err != nil {
 		return nil, err
@@ -127,4 +135,17 @@ func (this *Client) GetSecurityQuotes(m map[protocol.Exchange]string) (protocol.
 		return nil, err
 	}
 	return result.(protocol.StockQuotesResp), nil
+}
+
+// GetStockMinute 获取分时数据
+func (this *Client) GetStockMinute(exchange protocol.Exchange, code string) (*protocol.StockMinuteResp, error) {
+	f, err := protocol.MStockMinute.Frame(exchange, code)
+	if err != nil {
+		return nil, err
+	}
+	result, err := this.SendFrame(f)
+	if err != nil {
+		return nil, err
+	}
+	return result.(*protocol.StockMinuteResp), nil
 }

@@ -1,12 +1,15 @@
 package protocol
 
 const (
-	TypeConnect       = 0x000d //建立连接
-	TypeHandshake     = 0xdb0f //握手
-	TypeSecurityList  = 0x0450 //获取股票代码
-	TypeSecurityQuote = 0x053e // 行情信息
+	TypeConnect     = 0x000D //建立连接
+	TypeHeart       = 0x0004 //心跳
+	TypeStockList   = 0x0450 //获取股票代码
+	TypeStockQuote  = 0x053E //行情信息
+	TypeStockMinute = 0x051D //分时数据
 )
 
+/*
+从其他地方复制
 const (
 	LOGIN_ONE       = 0x000d //第一次登录
 	LOGIN_TWO       = 0x0fdb //第二次登录
@@ -65,3 +68,4 @@ const (
 	KLINE_TYPE_3MONTH    = 10 // 季K 线
 	KLINE_TYPE_YEARLY    = 11 // 年K 线
 )
+*/
