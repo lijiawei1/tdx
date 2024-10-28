@@ -1,12 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
-	"github.com/injoyai/goutil/g"
-	"github.com/injoyai/ios/client"
-	"github.com/injoyai/ios/server"
-	"github.com/injoyai/ios/server/listen"
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx"
 	"github.com/injoyai/tdx/protocol"
@@ -39,21 +33,4 @@ func main() {
 
 	select {}
 
-}
-
-// 监听第三方包发送的数据，确定协议用
-func _listen() {
-	listen.RunTCP(7709, func(s *server.Server) {
-		s.SetClientOption(func(c *client.Client) {
-			c.Logger.WithHEX()
-		})
-	})
-
-	buf := new(bytes.Buffer)
-	err := binary.Write(buf, binary.LittleEndian, g.Map{
-		"name": "名称",
-		"age":  17,
-	})
-	logs.PrintErr(err)
-	logs.Debug(buf.String())
 }

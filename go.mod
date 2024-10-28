@@ -6,7 +6,7 @@ require (
 	github.com/injoyai/base v1.0.18
 	github.com/injoyai/conv v1.1.10
 	github.com/injoyai/goutil v0.0.0-20241009040015-3d20afe3efe6
-	github.com/injoyai/ios v0.0.3
+	github.com/injoyai/ios v0.0.4
 	github.com/injoyai/logs v1.0.9
 	golang.org/x/text v0.16.0
 )

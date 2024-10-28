@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	MConnect       = connect{}
-	MSecurityQuote = securityQuote{}
-	MSecurityList  = securityList{}
+	MConnect    = connect{}
+	MStockQuote = stockQuote{}
+	MStockList  = stockList{}
 )
 
 type ConnectResp struct {
@@ -41,22 +41,26 @@ func (connect) Decode(bs []byte) (*ConnectResp, error) {
 
  */
 
-type SecurityListResp struct {
+type StockListResp struct {
 	Count uint16
-	List  []*Security
+	List  []*Stock
 }
 
-type Security struct {
-	Code         string
-	VolUnit      uint16
-	DecimalPoint int8
-	Name         string
-	PreClose     float64
+type Stock struct {
+	Name         string  //股票名称
+	Code         string  //股票代码
+	VolUnit      uint16  //未知
+	DecimalPoint int8    //未知
+	PreClose     float64 //未知
 }
 
-type securityList struct{}
+func (this *Stock) String() string {
+	return fmt.Sprintf("%s(%s)", this.Name, this.Code)
+}
 
-func (securityList) Frame(exchange Exchange, starts ...uint16) *Frame {
+type stockList struct{}
+
+func (stockList) Frame(exchange Exchange, starts ...uint16) *Frame {
 	start := conv.DefaultUint16(0, starts...)
 	return &Frame{
 		Control: Control01,
@@ -65,25 +69,26 @@ func (securityList) Frame(exchange Exchange, starts ...uint16) *Frame {
 	}
 }
 
-func (securityList) Decode(bs []byte) (*SecurityListResp, error) {
+func (stockList) Decode(bs []byte) (*StockListResp, error) {
 
 	if len(bs) < 2 {
 		return nil, errors.New("数据长度不足")
 	}
 
-	resp := &SecurityListResp{
+	resp := &StockListResp{
 		Count: Uint16(bs[:2]),
 	}
 	bs = bs[2:]
 
 	for i := uint16(0); i < resp.Count; i++ {
-		sec := &Security{
-			Code:     String(bs[:6]),
-			VolUnit:  Uint16(bs[6:8]),
-			Name:     string(UTF8ToGBK(bs[8:16])),
-			PreClose: getVolume(Uint32(bs[16:20])),
+		sec := &Stock{
+			Code:         string(bs[:6]),
+			VolUnit:      Uint16(bs[6:8]),
+			Name:         string(UTF8ToGBK(bs[8:16])),
+			DecimalPoint: int8(bs[20]),
+			PreClose:     getVolume(Uint32(bs[21:25])),
 		}
-		bs = bs[20:]
+		bs = bs[29:]
 		resp.List = append(resp.List, sec)
 	}
 
@@ -97,9 +102,9 @@ func (securityList) Decode(bs []byte) (*SecurityListResp, error) {
 
  */
 
-type SecurityQuotesResp []*SecurityQuote
+type StockQuotesResp []*StockQuote
 
-func (this SecurityQuotesResp) String() string {
+func (this StockQuotesResp) String() string {
 	ls := []string(nil)
 	for _, v := range this {
 		ls = append(ls, v.String())
@@ -107,7 +112,7 @@ func (this SecurityQuotesResp) String() string {
 	return strings.Join(ls, "\n")
 }
 
-type SecurityQuote struct {
+type StockQuote struct {
 	Exchange       Exchange // 市场
 	Code           string   // 股票代码 6个ascii字符串
 	Active1        uint16   // 活跃度
@@ -136,7 +141,7 @@ type SecurityQuote struct {
 	Active2        uint16  // 活跃度
 }
 
-func (this *SecurityQuote) String() string {
+func (this *StockQuote) String() string {
 	return fmt.Sprintf(`%s%s
 %s
 总量：%s, 现量：%s, 总金额：%s, 内盘：%s, 外盘：%s
@@ -149,9 +154,9 @@ func (this *SecurityQuote) String() string {
 	)
 }
 
-type securityQuote struct{}
+type stockQuote struct{}
 
-func (this securityQuote) Frame(m map[Exchange]string) (*Frame, error) {
+func (this stockQuote) Frame(m map[Exchange]string) (*Frame, error) {
 	f := &Frame{
 		Control: Control01,
 		Type:    TypeSecurityQuote,
@@ -196,11 +201,11 @@ b212 昨天收盘价1186
 8defd10c 服务时间
 c005bed2668e05be15804d8ba12cb3b13a0083c3034100badc029d014201bc990384f70443029da503b7af074403a6e501b9db044504a6e2028dd5048d050000000000005909
 */
-func (this securityQuote) Decode(bs []byte) SecurityQuotesResp {
+func (this stockQuote) Decode(bs []byte) StockQuotesResp {
 
 	//logs.Debug(hex.EncodeToString(bs))
 
-	resp := SecurityQuotesResp{}
+	resp := StockQuotesResp{}
 
 	//前2字节是什么?
 	bs = bs[2:]
@@ -209,7 +214,7 @@ func (this securityQuote) Decode(bs []byte) SecurityQuotesResp {
 	bs = bs[2:]
 
 	for i := uint16(0); i < number; i++ {
-		sec := &SecurityQuote{
+		sec := &StockQuote{
 			Exchange: Exchange(bs[0]),
 			Code:     string(UTF8ToGBK(bs[1:7])),
 			Active1:  Uint16(bs[7:9]),

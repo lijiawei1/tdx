@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"bytes"
 	"encoding/hex"
 	"testing"
 )
@@ -58,4 +59,26 @@ func TestDecode(t *testing.T) {
 	//t.Log(hex.EncodeToString(resp.Data))
 	//
 	//t.Log(result)
+}
+
+func TestReadFrom(t *testing.T) {
+	s := "b1cb74001c00000000000d005100bd00789c6378c12ec325c7cb2061c5b4898987b9050ed1f90c2db74c1825bd18c1b42890fecff09c81819191f13fc3c9f3bb169f5e7dfefeb5ef57f7199a305009308208e5b32bb6bcbf701487120031c61e1e"
+	bs, err := hex.DecodeString(s)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	result, err := ReadFrom(bytes.NewReader(bs))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log(hex.EncodeToString(result))
+	resp, err := Decode(result)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log(hex.EncodeToString(resp.Data))
+	t.Log(string(resp.Data))
 }

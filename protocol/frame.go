@@ -7,7 +7,6 @@ import (
 	"github.com/injoyai/base/bytes"
 	"github.com/injoyai/base/g"
 	"github.com/injoyai/conv"
-	"github.com/injoyai/logs"
 	"io"
 )
 
@@ -16,7 +15,7 @@ const (
 	Prefix = 0x0c
 
 	// PrefixResp 响应帧头
-	PrefixResp = 0xb1cb74
+	PrefixResp = 0xb1cb7400
 )
 
 type Message interface {
@@ -109,7 +108,7 @@ func Decode(bs []byte) (*Response, error) {
 
 // ReadFrom 这里的r推荐传入*bufio.Reader
 func ReadFrom(r io.Reader) (result []byte, err error) {
-	logs.Debug("ReadFrom")
+
 	prefix := make([]byte, 4)
 	for {
 		result = []byte(nil)
@@ -133,8 +132,7 @@ func ReadFrom(r io.Reader) (result []byte, err error) {
 		result = append(result, buf...)
 
 		//获取后续字节长度
-		length := uint16(result[11])<<8 + uint16(result[10])
-		logs.Debug("长度：", length)
+		length := uint16(result[13])<<8 + uint16(result[12])
 		buf = make([]byte, length)
 		_, err = io.ReadFull(r, buf)
 		if err != nil {

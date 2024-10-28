@@ -14,7 +14,7 @@ func main() {
 	logs.PrintErr(err)
 
 	for _, v := range resp.List {
-		logs.Debugf("%#v\n", v)
+		logs.Debug(v)
 	}
 
 	select {}

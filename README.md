@@ -7,3 +7,5 @@
 ![](docs/plan.png)
 * 基本信息(5档报价)
 ![](docs/plan20241025.png)
+* 基本信息(股票列表)
+![](docs/plan20241028.png)

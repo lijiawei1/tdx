@@ -19,20 +19,15 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 	}
 
 	cli.c, err = dial.TCP(addr, func(c *client.Client) {
-		c.Logger.WithHEX() //以HEX显示
-		c.SetOption(op...) //自定义选项
-		//c.AllReader = ios.NewAllReader(c.Reader.(io.Reader), protocol.ReadFrom) //分包
+		c.Logger.WithHEX()                             //以HEX显示
+		c.SetOption(op...)                             //自定义选项
 		c.Event.OnReadFrom = protocol.ReadFrom         //分包
 		c.Event.OnDealMessage = cli.handlerDealMessage //处理分包数据
-
-		logs.Debug("option")
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	logs.Debug("run")
-	logs.Debugf("%#v\n", cli.c.Event.OnReadFrom)
 	go cli.c.Run()
 
 	err = cli.connect()
@@ -62,10 +57,10 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 	var resp any
 	switch f.Type {
 	case protocol.TypeSecurityQuote:
-		resp = protocol.MSecurityQuote.Decode(f.Data)
+		resp = protocol.MStockQuote.Decode(f.Data)
 
 	case protocol.TypeSecurityList:
-		resp, err = protocol.MSecurityList.Decode(f.Data)
+		resp, err = protocol.MStockList.Decode(f.Data)
 
 	}
 
@@ -74,7 +69,6 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 		return
 	}
 
-	logs.Debug(resp)
 	this.w.Done(conv.String(f.MsgID), resp)
 
 }
@@ -112,19 +106,19 @@ func (this *Client) connect() error {
 }
 
 // GetSecurityList 获取市场内指定范围内的所有证券代码
-func (this *Client) GetSecurityList(exchange protocol.Exchange, starts ...uint16) (*protocol.SecurityListResp, error) {
-	f := protocol.MSecurityList.Frame(exchange, starts...)
+func (this *Client) GetSecurityList(exchange protocol.Exchange, starts ...uint16) (*protocol.StockListResp, error) {
+	f := protocol.MStockList.Frame(exchange, starts...)
 	result, err := this.SendFrame(f)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*protocol.SecurityListResp), nil
+	return result.(*protocol.StockListResp), nil
 
 }
 
 // GetSecurityQuotes 获取盘口五档报价
-func (this *Client) GetSecurityQuotes(m map[protocol.Exchange]string) (protocol.SecurityQuotesResp, error) {
-	f, err := protocol.MSecurityQuote.Frame(m)
+func (this *Client) GetSecurityQuotes(m map[protocol.Exchange]string) (protocol.StockQuotesResp, error) {
+	f, err := protocol.MStockQuote.Frame(m)
 	if err != nil {
 		return nil, err
 	}
@@ -132,5 +126,5 @@ func (this *Client) GetSecurityQuotes(m map[protocol.Exchange]string) (protocol.
 	if err != nil {
 		return nil, err
 	}
-	return result.(protocol.SecurityQuotesResp), nil
+	return result.(protocol.StockQuotesResp), nil
 }

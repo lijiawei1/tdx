@@ -10,18 +10,22 @@ import (
 	"io"
 )
 
+// String 字节先转小端,再转字符
 func String(bs []byte) string {
 	return string(bytes2.Reverse(bs))
 }
 
+// Bytes 任意类型转小端字节
 func Bytes(n any) []byte {
 	return bytes2.Reverse(conv.Bytes(n))
 }
 
+// Uint32 字节通过小端方式转为uint32
 func Uint32(bs []byte) uint32 {
 	return conv.Uint32(bytes2.Reverse(bs))
 }
 
+// Uint16 字节通过小端方式转为uint16
 func Uint16(bs []byte) uint16 {
 	return conv.Uint16(bytes2.Reverse(bs))
 }
