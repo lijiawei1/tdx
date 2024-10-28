@@ -3,6 +3,7 @@ package protocol
 const (
 	TypeConnect     = 0x000D //建立连接
 	TypeHeart       = 0x0004 //心跳
+	TypeStockCount  = 0x044E //获取股票数量
 	TypeStockList   = 0x0450 //获取股票代码
 	TypeStockQuote  = 0x053E //行情信息
 	TypeStockMinute = 0x051D //分时数据

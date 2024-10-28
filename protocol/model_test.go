@@ -51,3 +51,9 @@ func Test_securityList_Frame(t *testing.T) {
 	f := MStockList.Frame(ExchangeSH, 0)
 	t.Log(f.Bytes().HEX())
 }
+
+func Test_stockCount_Frame(t *testing.T) {
+	//预期0c0200000001080008004e04000075c73301
+	//   0c0000000001070007004e040075c73301
+	t.Log(MStockCount.Frame(ExchangeSH).Bytes().HEX())
+}

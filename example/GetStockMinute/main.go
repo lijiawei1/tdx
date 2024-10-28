@@ -11,7 +11,7 @@ func main() {
 	logs.PanicErr(err)
 
 	resp, err := c.GetStockMinute(protocol.ExchangeSZ, "000001")
-	logs.PrintErr(err)
+	logs.PanicErr(err)
 
 	for _, v := range resp.List {
 		logs.Debug(v)

@@ -70,6 +70,9 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 
 	case protocol.TypeConnect:
 
+	case protocol.TypeStockCount:
+		resp, err = protocol.MStockCount.Decode(f.Data)
+
 	case protocol.TypeStockList:
 		resp, err = protocol.MStockList.Decode(f.Data)
 
@@ -114,7 +117,17 @@ func (this *Client) connect() error {
 	return err
 }
 
-// GetStockList 获取市场内指定范围内的所有证券代码
+// GetStockCount 获取市场内的股票数量
+func (this *Client) GetStockCount(exchange protocol.Exchange) (*protocol.StockCountResp, error) {
+	f := protocol.MStockCount.Frame(exchange)
+	result, err := this.SendFrame(f)
+	if err != nil {
+		return nil, err
+	}
+	return result.(*protocol.StockCountResp), nil
+}
+
+// GetStockList 获取市场内指定范围内的所有证券代码,todo 这个start好像没用
 func (this *Client) GetStockList(exchange protocol.Exchange, starts ...uint16) (*protocol.StockListResp, error) {
 	f := protocol.MStockList.Frame(exchange, starts...)
 	result, err := this.SendFrame(f)

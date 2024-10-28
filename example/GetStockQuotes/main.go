@@ -25,7 +25,7 @@ func main() {
 		protocol.ExchangeSH: "000001",
 		protocol.ExchangeSZ: "600008",
 	})
-	logs.PrintErr(err)
+	logs.PanicErr(err)
 
 	for _, v := range resp {
 		logs.Debugf("%#v\n", v)
