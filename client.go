@@ -82,6 +82,9 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 	case protocol.TypeStockMinute:
 		resp, err = protocol.MStockMinute.Decode(f.Data)
 
+	case protocol.TypeStockMinuteTrade:
+		resp, err = protocol.MStockMinuteTrade.Decode(f.Data, "") //todo
+
 	}
 
 	if err != nil {
@@ -161,4 +164,17 @@ func (this *Client) GetStockMinute(exchange protocol.Exchange, code string) (*pr
 		return nil, err
 	}
 	return result.(*protocol.StockMinuteResp), nil
+}
+
+// GetStockMinuteTrade 获取分时交易详情
+func (this *Client) GetStockMinuteTrade(exchange protocol.Exchange, code string, start, count uint16) (*protocol.StockMinuteTradeResp, error) {
+	f, err := protocol.MStockMinuteTrade.Frame(exchange, code, start, count)
+	if err != nil {
+		return nil, err
+	}
+	result, err := this.SendFrame(f)
+	if err != nil {
+		return nil, err
+	}
+	return result.(*protocol.StockMinuteTradeResp), nil
 }

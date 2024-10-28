@@ -9,12 +9,13 @@ import (
 )
 
 var (
-	MConnect     = connect{}
-	MHeart       = heart{}
-	MStockCount  = stockCount{}
-	MStockQuote  = stockQuote{}
-	MStockList   = stockList{}
-	MStockMinute = stockMinute{}
+	MConnect          = connect{}
+	MHeart            = heart{}
+	MStockCount       = stockCount{}
+	MStockQuote       = stockQuote{}
+	MStockList        = stockList{}
+	MStockMinute      = stockMinute{}
+	MStockMinuteTrade = stockMinuteTrade{}
 )
 
 type ConnectResp struct {

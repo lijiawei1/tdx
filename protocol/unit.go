@@ -61,3 +61,22 @@ func FloatUnitString(f float64) string {
 func IntUnitString(n int) string {
 	return FloatUnitString(float64(n))
 }
+
+func GetTime(bs [2]byte) string {
+	n := Uint16(bs[:])
+	h := n / 60
+	m := n % 60
+	return fmt.Sprintf("%02d:%02d", h, m)
+}
+
+func basePrice(code string) Price {
+	if len(code) == 0 {
+		return 1
+	}
+	switch code[:2] {
+	case "60", "30", "68", "00":
+		return 1
+	default:
+		return 10
+	}
+}
