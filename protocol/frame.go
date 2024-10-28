@@ -12,10 +12,10 @@ import (
 
 const (
 	// Prefix 固定帧头
-	Prefix = 0x0c
+	Prefix = 0x0C
 
 	// PrefixResp 响应帧头
-	PrefixResp = 0xb1cb7400
+	PrefixResp = 0xB1CB7400
 )
 
 type Message interface {
