@@ -137,7 +137,7 @@ func (this *Client) GetStockQuotes(m map[protocol.Exchange]string) (protocol.Sto
 	return result.(protocol.StockQuotesResp), nil
 }
 
-// GetStockMinute 获取分时数据
+// GetStockMinute 获取分时数据,todo 解析好像不对
 func (this *Client) GetStockMinute(exchange protocol.Exchange, code string) (*protocol.StockMinuteResp, error) {
 	f, err := protocol.MStockMinute.Frame(exchange, code)
 	if err != nil {
