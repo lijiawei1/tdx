@@ -6,7 +6,12 @@ import (
 
 type StockMinuteResp struct {
 	Count uint16
-	List  []PriceLevel
+	List  []PriceNumber
+}
+
+type PriceNumber struct {
+	Price  Price
+	Number int
 }
 
 type stockMinute struct{}
@@ -39,13 +44,10 @@ func (this *stockMinute) Decode(bs []byte) (*StockMinuteResp, error) {
 
 	for i := uint16(0); i < resp.Count; i++ {
 		bs, price = GetPrice(bs)
-		var unknown Price
-		bs, unknown = GetPrice(bs) //这个是什么
-		_ = unknown
-		//logs.Debug(price, unknown)
+		bs, _ = CutInt(bs) //这个是什么
 		var number int
 		bs, number = CutInt(bs)
-		resp.List = append(resp.List, PriceLevel{
+		resp.List = append(resp.List, PriceNumber{
 			Price:  price,
 			Number: number,
 		})

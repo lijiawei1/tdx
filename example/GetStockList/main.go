@@ -10,11 +10,11 @@ func main() {
 	c, err := tdx.Dial("124.71.187.122:7709")
 	logs.PanicErr(err)
 
-	resp, err := c.GetStockList(protocol.ExchangeSH, 255)
+	resp, err := c.GetStockList(protocol.ExchangeSH, 369)
 	logs.PanicErr(err)
 
-	for _, v := range resp.List {
-		logs.Debug(v)
+	for i, v := range resp.List {
+		logs.Debug(i, v)
 	}
 	logs.Debug("总数:", resp.Count)
 

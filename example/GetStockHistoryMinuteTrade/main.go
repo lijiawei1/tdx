@@ -5,12 +5,13 @@ import (
 	"github.com/injoyai/tdx"
 	"github.com/injoyai/tdx/example/common"
 	"github.com/injoyai/tdx/protocol"
+	"time"
 )
 
 func main() {
 	common.Test(func(c *tdx.Client) {
-
-		resp, err := c.GetStockMinuteTrade(protocol.ExchangeSH, "000001", 0, 1900)
+		t := time.Date(2024, 10, 29, 0, 0, 0, 0, time.Local)
+		resp, err := c.GetStockHistoryMinuteTrade(t, protocol.ExchangeSH, "000001", 0, 2000)
 		logs.PanicErr(err)
 
 		for _, v := range resp.List {
@@ -18,6 +19,5 @@ func main() {
 		}
 
 		logs.Debug("总数：", resp.Count)
-
 	})
 }

@@ -1,6 +1,7 @@
 package tdx
 
 import (
+	"github.com/injoyai/base/maps"
 	"github.com/injoyai/base/maps/wait/v2"
 	"github.com/injoyai/conv"
 	"github.com/injoyai/ios"
@@ -16,6 +17,7 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 
 	cli = &Client{
 		w: wait.New(time.Second * 2),
+		m: maps.NewSafe(),
 	}
 
 	cli.c, err = dial.TCP(addr, func(c *client.Client) {
@@ -48,6 +50,7 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 type Client struct {
 	c     *client.Client
 	w     *wait.Entity
+	m     *maps.Safe
 	msgID uint32
 }
 
@@ -64,6 +67,9 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 		logs.Err(err)
 		return
 	}
+
+	val, _ := this.m.GetAndDel(conv.String(f.MsgID))
+	code := conv.String(val)
 
 	var resp any
 	switch f.Type {
@@ -83,7 +89,10 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 		resp, err = protocol.MStockMinute.Decode(f.Data)
 
 	case protocol.TypeStockMinuteTrade:
-		resp, err = protocol.MStockMinuteTrade.Decode(f.Data, "") //todo
+		resp, err = protocol.MStockMinuteTrade.Decode(f.Data, code) //todo
+
+	case protocol.TypeStockHistoryMinuteTrade:
+		resp, err = protocol.MStockHistoryMinuteTrade.Decode(f.Data, code)
 
 	}
 
@@ -130,9 +139,10 @@ func (this *Client) GetStockCount(exchange protocol.Exchange) (*protocol.StockCo
 	return result.(*protocol.StockCountResp), nil
 }
 
-// GetStockList 获取市场内指定范围内的所有证券代码,todo 这个start好像没用
-func (this *Client) GetStockList(exchange protocol.Exchange, starts ...uint16) (*protocol.StockListResp, error) {
-	f := protocol.MStockList.Frame(exchange, starts...)
+// GetStockList 获取市场内指定范围内的所有证券代码,一次固定返回1000只,上证股票有效范围370-1480
+// 上证前370只是395/399开头的(中证500/总交易等辅助类),在后面的话是一些100开头的国债
+func (this *Client) GetStockList(exchange protocol.Exchange, start uint16) (*protocol.StockListResp, error) {
+	f := protocol.MStockList.Frame(exchange, start)
 	result, err := this.SendFrame(f)
 	if err != nil {
 		return nil, err
@@ -166,7 +176,7 @@ func (this *Client) GetStockMinute(exchange protocol.Exchange, code string) (*pr
 	return result.(*protocol.StockMinuteResp), nil
 }
 
-// GetStockMinuteTrade 获取分时交易详情
+// GetStockMinuteTrade 获取分时交易详情,服务器最多返回1800条,count-start<=1800
 func (this *Client) GetStockMinuteTrade(exchange protocol.Exchange, code string, start, count uint16) (*protocol.StockMinuteTradeResp, error) {
 	f, err := protocol.MStockMinuteTrade.Frame(exchange, code, start, count)
 	if err != nil {
@@ -177,4 +187,54 @@ func (this *Client) GetStockMinuteTrade(exchange protocol.Exchange, code string,
 		return nil, err
 	}
 	return result.(*protocol.StockMinuteTradeResp), nil
+}
+
+// GetStockMinuteTradeAll 获取分时全部交易详情,todo 只做参考 因为交易实时在进行,然后又是分页读取的,所以会出现读取间隔内产生的交易会丢失
+func (this *Client) GetStockMinuteTradeAll(exchange protocol.Exchange, code string) (*protocol.StockMinuteTradeResp, error) {
+	resp := &protocol.StockMinuteTradeResp{}
+	maxSize := uint16(1800)
+	for i := uint16(0); ; i += maxSize {
+		r, err := this.GetStockMinuteTrade(exchange, code, i, i+maxSize)
+		if err != nil {
+			return nil, err
+		}
+		resp.Count += r.Count
+		resp.List = append(resp.List, r.List...)
+
+		if r.Count < maxSize {
+			break
+		}
+	}
+	return resp, nil
+}
+
+// GetStockHistoryMinuteTrade 获取历史分时交易,,只能获取昨天及之前的数据,服务器最多返回2000条,count-start<=2000
+func (this *Client) GetStockHistoryMinuteTrade(t time.Time, exchange protocol.Exchange, code string, start, count uint16) (*protocol.StockHistoryMinuteTradeResp, error) {
+	f, err := protocol.MStockHistoryMinuteTrade.Frame(t, exchange, code, start, count)
+	if err != nil {
+		return nil, err
+	}
+	result, err := this.SendFrame(f)
+	if err != nil {
+		return nil, err
+	}
+	return result.(*protocol.StockHistoryMinuteTradeResp), nil
+}
+
+// GetStockHistoryMinuteTradeAll 获取历史分时全部交易,通过多次请求来拼接,只能获取昨天及之前的数据
+func (this *Client) GetStockHistoryMinuteTradeAll(exchange protocol.Exchange, code string) (*protocol.StockMinuteTradeResp, error) {
+	resp := &protocol.StockMinuteTradeResp{}
+	maxSize := uint16(2000)
+	for i := uint16(0); ; i += maxSize {
+		r, err := this.GetStockMinuteTrade(exchange, code, i, i+maxSize)
+		if err != nil {
+			return nil, err
+		}
+		resp.Count += r.Count
+		resp.List = append(resp.List, r.List...)
+		if r.Count < maxSize {
+			break
+		}
+	}
+	return resp, nil
 }

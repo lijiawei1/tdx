@@ -3,7 +3,6 @@ package protocol
 import (
 	"errors"
 	"fmt"
-	"github.com/injoyai/conv"
 )
 
 type StockListResp struct {
@@ -25,8 +24,7 @@ func (this *Stock) String() string {
 
 type stockList struct{}
 
-func (stockList) Frame(exchange Exchange, starts ...uint16) *Frame {
-	start := conv.DefaultUint16(0, starts...)
+func (stockList) Frame(exchange Exchange, start uint16) *Frame {
 	return &Frame{
 		Control: Control01,
 		Type:    TypeStockList,
@@ -53,6 +51,7 @@ func (stockList) Decode(bs []byte) (*StockListResp, error) {
 			DecimalPoint: int8(bs[20]),
 			PreClose:     getVolume(Uint32(bs[21:25])),
 		}
+		//logs.Debug(bs[25:29]) //26和28字节 好像是枚举(基本是44,45和34,35)
 		bs = bs[29:]
 		resp.List = append(resp.List, sec)
 	}

@@ -20,6 +20,15 @@ func Bytes(n any) []byte {
 	return bytes2.Reverse(conv.Bytes(n))
 }
 
+// Reverse 字节倒序
+func Reverse(bs []byte) []byte {
+	x := make([]byte, len(bs))
+	for i, v := range bs {
+		x[len(bs)-i-1] = v
+	}
+	return x
+}
+
 // Uint32 字节通过小端方式转为uint32
 func Uint32(bs []byte) uint32 {
 	return conv.Uint32(bytes2.Reverse(bs))

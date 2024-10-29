@@ -10,7 +10,7 @@ func main() {
 	c, err := tdx.Dial("124.71.187.122:7709")
 	logs.PanicErr(err)
 
-	resp, err := c.GetStockMinute(protocol.ExchangeSZ, "000001")
+	resp, err := c.GetStockMinute(protocol.ExchangeSH, "000001")
 	logs.PanicErr(err)
 
 	for _, v := range resp.List {
