@@ -9,3 +9,5 @@
 ![](docs/plan20241028-1.png)
 * 分时成交
 ![](docs/plan20241028-2.png)
+* K线
+![](docs/plan20241029.png)
