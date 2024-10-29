@@ -71,11 +71,15 @@ func IntUnitString(n int) string {
 	return FloatUnitString(float64(n))
 }
 
-func GetTime(bs [2]byte) string {
+func GetDate(bs [2]byte) string {
 	n := Uint16(bs[:])
 	h := n / 60
 	m := n % 60
 	return fmt.Sprintf("%02d:%02d", h, m)
+}
+
+func GetTime(bs [4]byte) string {
+	return ""
 }
 
 func basePrice(code string) Price {

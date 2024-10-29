@@ -9,6 +9,7 @@ const (
 	TypeStockMinute             = 0x051D //分时数据
 	TypeStockMinuteTrade        = 0x0FC5 //分时交易
 	TypeStockHistoryMinuteTrade = 0x0FB5 //历史分时交易
+	TypeStockKline              = 0x052D //K线图
 )
 
 /*

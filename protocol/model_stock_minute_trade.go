@@ -84,7 +84,7 @@ func (stockMinuteTrade) Decode(bs []byte, code string) (*StockMinuteTradeResp, e
 	lastPrice := Price(0)
 	for i := uint16(0); i < resp.Count; i++ {
 		mt := &StockMinuteTrade{
-			Time: GetTime([2]byte(bs[:2])),
+			Time: GetDate([2]byte(bs[:2])),
 		}
 		var sub Price
 		bs, sub = GetPrice(bs[2:])

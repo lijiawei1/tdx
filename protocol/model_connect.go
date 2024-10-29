@@ -13,6 +13,7 @@ var (
 	MStockMinute             = stockMinute{}
 	MStockMinuteTrade        = stockMinuteTrade{}
 	MStockHistoryMinuteTrade = stockHistoryMinuteTrade{}
+	MStockKline              = stockKline{}
 )
 
 type ConnectResp struct {
