@@ -10,7 +10,7 @@ import (
 
 func main() {
 	common.Test(func(c *tdx.Client) {
-		t := time.Date(2024, 10, 29, 0, 0, 0, 0, time.Local)
+		t := time.Date(2024, 10, 28, 0, 0, 0, 0, time.Local)
 		resp, err := c.GetStockHistoryMinuteTrade(t, protocol.ExchangeSH, "000001", 0, 2000)
 		logs.PanicErr(err)
 
