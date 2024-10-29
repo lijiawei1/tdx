@@ -72,6 +72,12 @@ type Client struct {
 // handlerDealMessage 处理服务器响应的数据
 func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 
+	defer func() {
+		if e := recover(); e != nil {
+			logs.Err(e)
+		}
+	}()
+
 	f, err := protocol.Decode(msg.Payload())
 	if err != nil {
 		logs.Err(err)
@@ -79,7 +85,6 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 	}
 
 	val, _ := this.m.GetAndDel(conv.String(f.MsgID))
-	code := conv.String(val)
 
 	var resp any
 	switch f.Type {
@@ -101,10 +106,13 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 		resp, err = protocol.MStockMinute.Decode(f.Data)
 
 	case protocol.TypeStockMinuteTrade:
-		resp, err = protocol.MStockMinuteTrade.Decode(f.Data, code) //todo
+		resp, err = protocol.MStockMinuteTrade.Decode(f.Data, conv.String(val)) //todo
 
 	case protocol.TypeStockHistoryMinuteTrade:
-		resp, err = protocol.MStockHistoryMinuteTrade.Decode(f.Data, code)
+		resp, err = protocol.MStockHistoryMinuteTrade.Decode(f.Data, conv.String(val))
+
+	case protocol.TypeStockKline:
+		resp, err = protocol.MStockKline.Decode(f.Data, protocol.TypeKline(conv.Uint16(val)))
 
 	default:
 		err = fmt.Errorf("通讯类型未解析:0x%X", f.Type)
@@ -243,4 +251,62 @@ func (this *Client) GetStockHistoryMinuteTradeAll(exchange protocol.Exchange, co
 		}
 	}
 	return resp, nil
+}
+
+// GetStockKline 获取k线数据
+func (this *Client) GetStockKline(Type protocol.TypeKline, req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	f, err := protocol.MStockKline.Frame(Type, req)
+	if err != nil {
+		return nil, err
+	}
+	result, err := this.SendFrame(f)
+	if err != nil {
+		return nil, err
+	}
+	return result.(*protocol.StockKlineResp), nil
+}
+
+// GetStockKlineMinute 获取一分钟k线数据
+func (this *Client) GetStockKlineMinute(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKlineMinute, req)
+}
+
+// GetStockKline5Minute 获取五分钟k线数据
+func (this *Client) GetStockKline5Minute(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKline5Minute, req)
+}
+
+// GetStockKline15Minute 获取十五分钟k线数据
+func (this *Client) GetStockKline15Minute(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKline15Minute, req)
+}
+
+// GetStockKline30Minute 获取三十分钟k线数据
+func (this *Client) GetStockKline30Minute(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKline30Minute, req)
+}
+
+// GetStockKlineDay 获取日k线数据
+func (this *Client) GetStockKlineDay(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKlineDay, req)
+}
+
+// GetStockKlineWeek 获取周k线数据
+func (this *Client) GetStockKlineWeek(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKlineWeek, req)
+}
+
+// GetStockKlineMonth 获取月k线数据
+func (this *Client) GetStockKlineMonth(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKlineMonth, req)
+}
+
+// GetStockKlineQuarter 获取季k线数据
+func (this *Client) GetStockKlineQuarter(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKlineQuarter, req)
+}
+
+// GetStockKlineYear 获取年k线数据
+func (this *Client) GetStockKlineYear(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKlineYear, req)
 }

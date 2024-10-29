@@ -58,18 +58,5 @@ const (
 
 )
 
-const (
-	KLINE_TYPE_5MIN      = 0  // 5分钟K 线
-	KLINE_TYPE_15MIN     = 1  // 15分钟K 线
-	KLINE_TYPE_30MIN     = 2  // 30分钟K 线
-	KLINE_TYPE_1HOUR     = 3  // 1小时K 线
-	KLINE_TYPE_DAILY     = 4  // 日K 线
-	KLINE_TYPE_WEEKLY    = 5  // 周K 线
-	KLINE_TYPE_MONTHLY   = 6  // 月K 线
-	KLINE_TYPE_EXHQ_1MIN = 7  // 1分钟
-	KLINE_TYPE_1MIN      = 8  // 1分钟K 线
-	KLINE_TYPE_RI_K      = 9  // 日K 线
-	KLINE_TYPE_3MONTH    = 10 // 季K 线
-	KLINE_TYPE_YEARLY    = 11 // 年K 线
-)
+
 */

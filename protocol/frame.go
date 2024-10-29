@@ -65,8 +65,8 @@ type Response struct {
 
 /*
 Decode
-帧头			|未知  	|消息ID    	|控制码   	|数据类型   	|未解压长度  	|解压长度   	|数据域
-b1cb7400 	|1c   	|00000000 	|00      	|0d00       |5100      	|bd00     	|789c6378c1cecb252ace6066c5b4898987b9050ed1f90cc5b74c18a5bc18c1b43490fecff09c81819191f13fc3c9f3bb169f5e7dfefeb5ef57f7199a305009308208e5b32bb6bcbf70148712002d7f1e13
+帧头		|未知  	|消息ID    	|控制码   	|数据类型   	|未解压长度  	|解压长度   	|数据域
+b1cb7400 	|1c   	|00000000 	|00      	|0d00       |5100      		|bd00     	|789c6378c1cecb252ace6066c5b4898987b9050ed1f90cc5b74c18a5bc18c1b43490fecff09c81819191f13fc3c9f3bb169f5e7dfefeb5ef57f7199a305009308208e5b32bb6bcbf70148712002d7f1e13
 */
 func Decode(bs []byte) (*Response, error) {
 	if len(bs) < 16 {

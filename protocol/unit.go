@@ -8,6 +8,7 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io"
+	"time"
 )
 
 // String 字节先转小端,再转字符
@@ -56,10 +57,11 @@ func FloatUnit(f float64) (float64, string) {
 }
 
 func FloatUnitString(f float64) string {
-	m := []string{"万", "亿"}
+	m := []string{"万", "亿", "万亿", "亿亿", "万亿亿", "亿亿亿"}
 	unit := ""
-	for i := 0; f > 1e4 && i < len(m); f /= 1e4 {
+	for i := 0; f > 1e4 && i < len(m); i++ {
 		unit = m[i]
+		f /= 1e4
 	}
 	if unit == "" {
 		return conv.String(f)
@@ -78,8 +80,28 @@ func GetDate(bs [2]byte) string {
 	return fmt.Sprintf("%02d:%02d", h, m)
 }
 
-func GetTime(bs [4]byte) string {
-	return ""
+func GetTime(bs [4]byte, Type TypeKline) time.Time {
+	switch Type {
+	case TypeKlineDay, TypeKlineMinute, TypeKlineMinute2:
+
+		yearMonthDay := Uint16(bs[:2])
+		hourMinute := Uint16(bs[:2])
+		year := int(yearMonthDay>>11 + 2004)
+		month := yearMonthDay % 2048 / 100
+		day := int((yearMonthDay % 2048) % 100)
+		hour := int(hourMinute / 60)
+		minute := int(hourMinute % 60)
+		return time.Date(year, time.Month(month), day, hour, minute, 0, 0, time.Local)
+
+	default:
+
+		yearMonthDay := Uint32(bs[:4])
+		year := int(yearMonthDay / 10000)
+		month := int((yearMonthDay % 10000) / 100)
+		day := int(yearMonthDay % 100)
+		return time.Date(year, time.Month(month), day, 15, 0, 0, 0, time.Local)
+
+	}
 }
 
 func basePrice(code string) Price {
