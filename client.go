@@ -234,12 +234,12 @@ func (this *Client) GetStockMinuteTradeAll(exchange protocol.Exchange, code stri
 	resp := &protocol.StockMinuteTradeResp{}
 	size := uint16(1800)
 	for i := uint16(0); ; i += size {
-		r, err := this.GetStockMinuteTrade(exchange, code, i, i+size)
+		r, err := this.GetStockMinuteTrade(exchange, code, i, size)
 		if err != nil {
 			return nil, err
 		}
 		resp.Count += r.Count
-		resp.List = append(resp.List, r.List...)
+		resp.List = append(r.List, resp.List...)
 
 		if r.Count < size {
 			break
@@ -269,7 +269,7 @@ func (this *Client) GetStockHistoryMinuteTradeAll(exchange protocol.Exchange, co
 	resp := &protocol.StockMinuteTradeResp{}
 	size := uint16(2000)
 	for i := uint16(0); ; i += size {
-		r, err := this.GetStockMinuteTrade(exchange, code, i, i+size)
+		r, err := this.GetStockMinuteTrade(exchange, code, i, size)
 		if err != nil {
 			return nil, err
 		}
@@ -299,18 +299,25 @@ func (this *Client) GetStockKline(Type protocol.TypeKline, req *protocol.StockKl
 func (this *Client) GetStockKlineAll(Type protocol.TypeKline, exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
 	resp := &protocol.StockKlineResp{}
 	size := uint16(800)
+	var last *protocol.StockKline
 	for i := uint16(0); ; i += size {
 		r, err := this.GetStockKline(Type, &protocol.StockKlineReq{
 			Exchange: exchange,
 			Code:     code,
 			Start:    i,
-			Count:    i + size,
+			Count:    size,
 		})
 		if err != nil {
 			return nil, err
 		}
+		if last != nil && len(r.List) > 0 {
+			last.Last = r.List[len(r.List)-1].Close
+		}
+		if len(r.List) > 0 {
+			last = r.List[0]
+		}
 		resp.Count += r.Count
-		resp.List = append(resp.List, r.List...)
+		resp.List = append(r.List, resp.List...)
 		if r.Count < size {
 			break
 		}
