@@ -10,7 +10,7 @@ import (
 func main() {
 	common.Test(func(c *tdx.Client) {
 
-		resp, err := c.GetStockMinuteTrade(protocol.ExchangeSH, "000001", 0, 1900)
+		resp, err := c.GetStockMinuteTradeAll(protocol.ExchangeSH, "000001")
 		logs.PanicErr(err)
 
 		for _, v := range resp.List {
