@@ -74,7 +74,7 @@ func IntUnitString(n int) string {
 	return FloatUnitString(float64(n))
 }
 
-func GetDate(bs [2]byte) string {
+func GetHourMinute(bs [2]byte) string {
 	n := Uint16(bs[:])
 	h := n / 60
 	m := n % 60
