@@ -37,6 +37,7 @@ type StockKlineResp struct {
 }
 
 type StockKline struct {
+	Last   Price     //昨日收盘价,这个是列表的上一条数据的收盘价，如果没有上条数据，那么这个值为0
 	Open   Price     //开盘价
 	High   Price     //最高价
 	Low    Price     //最低价
@@ -47,11 +48,32 @@ type StockKline struct {
 }
 
 func (this *StockKline) String() string {
-	return fmt.Sprintf("%s 开盘价：%s 最高价：%s 最低价：%s 收盘价：%s 成交量：%s 成交额：%s",
+	return fmt.Sprintf("%s 昨收盘：%s 开盘价：%s 最高价：%s 最低价：%s 收盘价：%s 涨跌：%s 涨跌幅：%0.2f 成交量：%s 成交额：%s",
 		this.Time.Format("2006-01-02 15:04:05"),
-		this.Open, this.High, this.Low, this.Close,
+		this.Last, this.Open, this.High, this.Low, this.Close,
+		this.RisePrice(), this.RiseRate(),
 		FloatUnitString(this.Volume), FloatUnitString(this.Amount),
 	)
+}
+
+// MaxDifference 最大差值，最高-最低
+func (this *StockKline) MaxDifference() Price {
+	return this.High - this.Low
+}
+
+// RisePrice 涨跌金额,第一个数据不准，仅做参考
+func (this *StockKline) RisePrice() Price {
+	if this.Last == 0 {
+		//稍微数据准确点，没减去0这么夸张，还是不准的
+		return this.Close - this.Open
+	}
+	return this.Close - this.Last
+
+}
+
+// RiseRate 涨跌比例/涨跌幅,第一个数据不准，仅做参考
+func (this *StockKline) RiseRate() float64 {
+	return float64(this.RisePrice()) / float64(this.Open) * 100
 }
 
 type stockKline struct{}
@@ -80,7 +102,7 @@ func (stockKline) Decode(bs []byte, Type TypeKline) (*StockKlineResp, error) {
 
 	bs = bs[2:]
 
-	var last Price
+	var last Price //上条数据(昨天)的收盘价
 	for i := uint16(0); i < resp.Count; i++ {
 		k := &StockKline{
 			Time: GetTime([4]byte(bs[:4]), Type),
@@ -95,11 +117,11 @@ func (stockKline) Decode(bs []byte, Type TypeKline) (*StockKlineResp, error) {
 		var low Price
 		bs, low = GetPrice(bs)
 
+		k.Last = last / 10
 		k.Open = (open + last) / 10
-		k.Close = (open + last + _close) / 10
+		k.Close = (last + open + _close) / 10
 		k.High = (open + last + high) / 10
 		k.Low = (open + last + low) / 10
-
 		last = last + open + _close
 
 		k.Volume = getVolume(Uint32(bs[:4]))
