@@ -1,16 +1,27 @@
 ### 拉取通达信的数据
+
 ### 参考 https://github.com/bensema/gotdx
 
-
 ### 开发进度
+
 * 基本信息(5档报价)
-![](docs/plan20241025.png)
+  ![](docs/plan20241025.png)
 * 股票列表
-![](docs/plan20241028-1.png)
+  ![](docs/plan20241028-1.png)
 * 分时成交
-![](docs/plan20241028-2.png)
+  ![](docs/plan20241028-2.png)
 * K线
-![](docs/plan20241029.png)
+  ![](docs/plan20241029.png)
+
+### 数据校对
+
+* 日K线校对
+  ![](docs/check_kline.png) ![](docs/check_kline_right.png)
+
+* 校对分时成交
+![](docs/check_trade.png)
+
+
 
 ### 如何使用
 
@@ -44,3 +55,14 @@ func main() {
 }
 
 ```
+
+#### IP地址
+
+| IP             | 检查时间       |
+|----------------|------------|
+| 124.71.187.122 | 2024-10-30 |
+| 122.51.120.217 | 2024-10-30 |
+| 待补充            | 2024-10-30 |
+
+
+
