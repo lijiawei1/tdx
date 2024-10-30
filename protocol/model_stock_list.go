@@ -11,11 +11,11 @@ type StockListResp struct {
 }
 
 type Stock struct {
-	Name         string  //股票名称
-	Code         string  //股票代码
-	VolUnit      uint16  //未知
-	DecimalPoint int8    //未知
-	PreClose     float64 //未知
+	Name     string  //股票名称
+	Code     string  //股票代码
+	Multiple uint16  //倍数,基本是0x64=100
+	Decimal  int8    //小数点,基本是2
+	PreClose float64 //未知
 }
 
 func (this *Stock) String() string {
@@ -45,11 +45,11 @@ func (stockList) Decode(bs []byte) (*StockListResp, error) {
 
 	for i := uint16(0); i < resp.Count; i++ {
 		sec := &Stock{
-			Code:         string(bs[:6]),
-			VolUnit:      Uint16(bs[6:8]),
-			Name:         string(UTF8ToGBK(bs[8:16])),
-			DecimalPoint: int8(bs[20]),
-			PreClose:     getVolume(Uint32(bs[21:25])),
+			Code:     string(bs[:6]),
+			Multiple: Uint16(bs[6:8]),
+			Name:     string(UTF8ToGBK(bs[8:16])),
+			Decimal:  int8(bs[20]),
+			PreClose: getVolume(Uint32(bs[21:25])),
 		}
 		//logs.Debug(bs[25:29]) //26和28字节 好像是枚举(基本是44,45和34,35)
 		bs = bs[29:]
