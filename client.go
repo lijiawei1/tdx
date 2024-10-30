@@ -85,6 +85,7 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 		return
 	}
 
+	//从缓存中获取数据,响应数据中不同类型有不同的处理方式,但是响应无返回该类型,固根据消息id进行缓存
 	val, _ := this.m.GetAndDel(conv.String(f.MsgID))
 
 	var resp any
@@ -130,8 +131,11 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 }
 
 // SendFrame 发送数据,并等待响应
-func (this *Client) SendFrame(f *protocol.Frame) (any, error) {
+func (this *Client) SendFrame(f *protocol.Frame, cache ...any) (any, error) {
 	f.MsgID = atomic.AddUint32(&this.msgID, 1)
+	if len(cache) > 0 {
+		this.m.Set(conv.String(f.MsgID), cache[0])
+	}
 	if _, err := this.Client.Write(f.Bytes()); err != nil {
 		return nil, err
 	}
@@ -212,7 +216,7 @@ func (this *Client) GetStockMinuteTrade(exchange protocol.Exchange, code string,
 	if err != nil {
 		return nil, err
 	}
-	result, err := this.SendFrame(f)
+	result, err := this.SendFrame(f, code)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +248,7 @@ func (this *Client) GetStockHistoryMinuteTrade(t time.Time, exchange protocol.Ex
 	if err != nil {
 		return nil, err
 	}
-	result, err := this.SendFrame(f)
+	result, err := this.SendFrame(f, code)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +279,7 @@ func (this *Client) GetStockKline(Type protocol.TypeKline, req *protocol.StockKl
 	if err != nil {
 		return nil, err
 	}
-	result, err := this.SendFrame(f)
+	result, err := this.SendFrame(f, Type.Uint16())
 	if err != nil {
 		return nil, err
 	}
