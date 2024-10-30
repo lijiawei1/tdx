@@ -10,6 +10,7 @@ type StockMinuteTradeResp struct {
 	List  []*StockMinuteTrade
 }
 
+// StockMinuteTrade 分时成交，todo 时间没有到秒和没有金额
 type StockMinuteTrade struct {
 	Time   string //时间
 	Price  Price  //价格
@@ -84,7 +85,7 @@ func (stockMinuteTrade) Decode(bs []byte, code string) (*StockMinuteTradeResp, e
 	lastPrice := Price(0)
 	for i := uint16(0); i < resp.Count; i++ {
 		mt := &StockMinuteTrade{
-			Time: GetDate([2]byte(bs[:2])),
+			Time: GetHourMinute([2]byte(bs[:2])),
 		}
 		var sub Price
 		bs, sub = GetPrice(bs[2:])
