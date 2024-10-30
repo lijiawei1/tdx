@@ -1,6 +1,7 @@
 package tdx
 
 import (
+	"errors"
 	"fmt"
 	"github.com/injoyai/base/maps"
 	"github.com/injoyai/base/maps/wait/v2"
@@ -10,6 +11,7 @@ import (
 	"github.com/injoyai/ios/client/dial"
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx/protocol"
+	"runtime/debug"
 	"sync/atomic"
 	"time"
 )
@@ -76,6 +78,7 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 	defer func() {
 		if e := recover(); e != nil {
 			logs.Err(e)
+			debug.PrintStack()
 		}
 	}()
 
@@ -169,15 +172,15 @@ func (this *Client) GetStockList(exchange protocol.Exchange, start uint16) (*pro
 // GetStockAll 通过多次请求的方式获取全部证券代码
 func (this *Client) GetStockAll(exchange protocol.Exchange) (*protocol.StockListResp, error) {
 	resp := &protocol.StockListResp{}
-	maxSize := uint16(1000)
-	for start := uint16(0); ; start += maxSize {
+	size := uint16(1000)
+	for start := uint16(0); ; start += size {
 		r, err := this.GetStockList(exchange, start)
 		if err != nil {
 			return nil, err
 		}
 		resp.Count += r.Count
 		resp.List = append(resp.List, r.List...)
-		if r.Count < maxSize {
+		if r.Count < size {
 			break
 		}
 	}
@@ -212,6 +215,9 @@ func (this *Client) GetStockMinute(exchange protocol.Exchange, code string) (*pr
 
 // GetStockMinuteTrade 获取分时交易详情,服务器最多返回1800条,count-start<=1800
 func (this *Client) GetStockMinuteTrade(exchange protocol.Exchange, code string, start, count uint16) (*protocol.StockMinuteTradeResp, error) {
+	if count > 1800 {
+		return nil, errors.New("数量不能超过1800")
+	}
 	f, err := protocol.MStockMinuteTrade.Frame(exchange, code, start, count)
 	if err != nil {
 		return nil, err
@@ -226,16 +232,16 @@ func (this *Client) GetStockMinuteTrade(exchange protocol.Exchange, code string,
 // GetStockMinuteTradeAll 获取分时全部交易详情,todo 只做参考 因为交易实时在进行,然后又是分页读取的,所以会出现读取间隔内产生的交易会丢失
 func (this *Client) GetStockMinuteTradeAll(exchange protocol.Exchange, code string) (*protocol.StockMinuteTradeResp, error) {
 	resp := &protocol.StockMinuteTradeResp{}
-	maxSize := uint16(1800)
-	for i := uint16(0); ; i += maxSize {
-		r, err := this.GetStockMinuteTrade(exchange, code, i, i+maxSize)
+	size := uint16(1800)
+	for i := uint16(0); ; i += size {
+		r, err := this.GetStockMinuteTrade(exchange, code, i, i+size)
 		if err != nil {
 			return nil, err
 		}
 		resp.Count += r.Count
 		resp.List = append(resp.List, r.List...)
 
-		if r.Count < maxSize {
+		if r.Count < size {
 			break
 		}
 	}
@@ -244,6 +250,9 @@ func (this *Client) GetStockMinuteTradeAll(exchange protocol.Exchange, code stri
 
 // GetStockHistoryMinuteTrade 获取历史分时交易,,只能获取昨天及之前的数据,服务器最多返回2000条,count-start<=2000
 func (this *Client) GetStockHistoryMinuteTrade(t time.Time, exchange protocol.Exchange, code string, start, count uint16) (*protocol.StockHistoryMinuteTradeResp, error) {
+	if count > 2000 {
+		return nil, errors.New("数量不能超过2000")
+	}
 	f, err := protocol.MStockHistoryMinuteTrade.Frame(t, exchange, code, start, count)
 	if err != nil {
 		return nil, err
@@ -258,15 +267,15 @@ func (this *Client) GetStockHistoryMinuteTrade(t time.Time, exchange protocol.Ex
 // GetStockHistoryMinuteTradeAll 获取历史分时全部交易,通过多次请求来拼接,只能获取昨天及之前的数据
 func (this *Client) GetStockHistoryMinuteTradeAll(exchange protocol.Exchange, code string) (*protocol.StockMinuteTradeResp, error) {
 	resp := &protocol.StockMinuteTradeResp{}
-	maxSize := uint16(2000)
-	for i := uint16(0); ; i += maxSize {
-		r, err := this.GetStockMinuteTrade(exchange, code, i, i+maxSize)
+	size := uint16(2000)
+	for i := uint16(0); ; i += size {
+		r, err := this.GetStockMinuteTrade(exchange, code, i, i+size)
 		if err != nil {
 			return nil, err
 		}
 		resp.Count += r.Count
 		resp.List = append(resp.List, r.List...)
-		if r.Count < maxSize {
+		if r.Count < size {
 			break
 		}
 	}
@@ -286,9 +295,37 @@ func (this *Client) GetStockKline(Type protocol.TypeKline, req *protocol.StockKl
 	return result.(*protocol.StockKlineResp), nil
 }
 
+// GetStockKlineAll 获取全部k线数据
+func (this *Client) GetStockKlineAll(Type protocol.TypeKline, exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	resp := &protocol.StockKlineResp{}
+	size := uint16(800)
+	for i := uint16(0); ; i += size {
+		r, err := this.GetStockKline(Type, &protocol.StockKlineReq{
+			Exchange: exchange,
+			Code:     code,
+			Start:    i,
+			Count:    i + size,
+		})
+		if err != nil {
+			return nil, err
+		}
+		resp.Count += r.Count
+		resp.List = append(resp.List, r.List...)
+		if r.Count < size {
+			break
+		}
+	}
+	return resp, nil
+}
+
 // GetStockKlineMinute 获取一分钟k线数据
 func (this *Client) GetStockKlineMinute(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
 	return this.GetStockKline(protocol.TypeKlineMinute, req)
+}
+
+// GetStockKlineMinuteAll 获取一分钟k线全部数据
+func (this *Client) GetStockKlineMinuteAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKlineMinute, exchange, code)
 }
 
 // GetStockKline5Minute 获取五分钟k线数据
@@ -296,9 +333,19 @@ func (this *Client) GetStockKline5Minute(req *protocol.StockKlineReq) (*protocol
 	return this.GetStockKline(protocol.TypeKline5Minute, req)
 }
 
+// GetStockKline5MinuteAll 获取5分钟k线全部数据
+func (this *Client) GetStockKline5MinuteAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKline5Minute, exchange, code)
+}
+
 // GetStockKline15Minute 获取十五分钟k线数据
 func (this *Client) GetStockKline15Minute(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
 	return this.GetStockKline(protocol.TypeKline15Minute, req)
+}
+
+// GetStockKline15MinuteAll 获取十五分钟k线全部数据
+func (this *Client) GetStockKline15MinuteAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKline15Minute, exchange, code)
 }
 
 // GetStockKline30Minute 获取三十分钟k线数据
@@ -306,9 +353,19 @@ func (this *Client) GetStockKline30Minute(req *protocol.StockKlineReq) (*protoco
 	return this.GetStockKline(protocol.TypeKline30Minute, req)
 }
 
+// GetStockKline30MinuteAll 获取三十分钟k线全部数据
+func (this *Client) GetStockKline30MinuteAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKline30Minute, exchange, code)
+}
+
 // GetStockKlineHour 获取小时k线数据
 func (this *Client) GetStockKlineHour(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
 	return this.GetStockKline(protocol.TypeKlineHour, req)
+}
+
+// GetStockKlineHourAll 获取小时k线全部数据
+func (this *Client) GetStockKlineHourAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKlineHour, exchange, code)
 }
 
 // GetStockKlineDay 获取日k线数据
@@ -316,9 +373,19 @@ func (this *Client) GetStockKlineDay(req *protocol.StockKlineReq) (*protocol.Sto
 	return this.GetStockKline(protocol.TypeKlineDay, req)
 }
 
+// GetStockKlineDayAll 获取日k线全部数据
+func (this *Client) GetStockKlineDayAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKlineDay, exchange, code)
+}
+
 // GetStockKlineWeek 获取周k线数据
 func (this *Client) GetStockKlineWeek(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
 	return this.GetStockKline(protocol.TypeKlineWeek, req)
+}
+
+// GetStockKlineWeekAll 获取周k线全部数据
+func (this *Client) GetStockKlineWeekAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKlineWeek, exchange, code)
 }
 
 // GetStockKlineMonth 获取月k线数据
@@ -326,12 +393,27 @@ func (this *Client) GetStockKlineMonth(req *protocol.StockKlineReq) (*protocol.S
 	return this.GetStockKline(protocol.TypeKlineMonth, req)
 }
 
+// GetStockKlineMonthAll 获取月k线全部数据
+func (this *Client) GetStockKlineMonthAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKlineMonth, exchange, code)
+}
+
 // GetStockKlineQuarter 获取季k线数据
 func (this *Client) GetStockKlineQuarter(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
 	return this.GetStockKline(protocol.TypeKlineQuarter, req)
 }
 
+// GetStockKlineQuarterAll 获取季k线全部数据
+func (this *Client) GetStockKlineQuarterAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKlineQuarter, exchange, code)
+}
+
 // GetStockKlineYear 获取年k线数据
 func (this *Client) GetStockKlineYear(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
 	return this.GetStockKline(protocol.TypeKlineYear, req)
+}
+
+// GetStockKlineYearAll 获取年k线数据
+func (this *Client) GetStockKlineYearAll(exchange protocol.Exchange, code string) (*protocol.StockKlineResp, error) {
+	return this.GetStockKlineAll(protocol.TypeKlineYear, exchange, code)
 }

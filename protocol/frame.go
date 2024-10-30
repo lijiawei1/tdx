@@ -54,9 +54,9 @@ func (this *Frame) Bytes() g.Bytes {
 
 type Response struct {
 	Prefix    uint32 //未知,猜测是帧头
-	I2        uint8  //未知,猜测是响应的控制码
+	Control   uint8  //响应的控制码,目前发现0c是错误,1c是成功,猜测左数右第4位代表是否成功
 	MsgID     uint32 //消息ID
-	Control   uint8  //未知,猜测是响应的控制码
+	Unknown   uint8  //未知,猜测是响应的控制码
 	Type      uint16 //响应类型,对应请求类型,如建立连接，请求分时数据等
 	ZipLength uint16 //数据长度
 	Length    uint16 //未压缩长度
@@ -65,7 +65,7 @@ type Response struct {
 
 /*
 Decode
-帧头		|未知  	|消息ID    	|控制码   	|数据类型   	|未解压长度  	|解压长度   	|数据域
+帧头		|控制码  	|消息ID    	|控制码   	|数据类型   	|未解压长度  	|解压长度   	|数据域
 b1cb7400 	|1c   	|00000000 	|00      	|0d00       |5100      		|bd00     	|789c6378c1cecb252ace6066c5b4898987b9050ed1f90cc5b74c18a5bc18c1b43490fecff09c81819191f13fc3c9f3bb169f5e7dfefeb5ef57f7199a305009308208e5b32bb6bcbf70148712002d7f1e13
 */
 func Decode(bs []byte) (*Response, error) {
@@ -74,13 +74,17 @@ func Decode(bs []byte) (*Response, error) {
 	}
 	resp := &Response{
 		Prefix:    Uint32(bs[:4]),
-		I2:        bs[4],
+		Control:   bs[4],
 		MsgID:     Uint32(bs[5:9]),
-		Control:   bs[9],
+		Unknown:   bs[9],
 		Type:      Uint16(bs[10:12]),
 		ZipLength: Uint16(bs[12:14]),
 		Length:    Uint16(bs[14:16]),
 		Data:      bs[16:],
+	}
+
+	if resp.Control&0x10 != 0x10 {
+		//return nil, fmt.Errorf("控制码不匹配,预期0x1c,得到0x%x", resp.Control)
 	}
 
 	if int(resp.ZipLength) != len(bs[16:]) {

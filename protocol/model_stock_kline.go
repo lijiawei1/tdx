@@ -15,6 +15,9 @@ type StockKlineReq struct {
 }
 
 func (this *StockKlineReq) Bytes(Type TypeKline) (g.Bytes, error) {
+	if this.Count > 800 {
+		return nil, errors.New("单次数量不能超过800")
+	}
 	if len(this.Code) != 6 {
 		return nil, errors.New("股票代码长度错误")
 	}
@@ -78,7 +81,6 @@ func (stockKline) Decode(bs []byte, Type TypeKline) (*StockKlineResp, error) {
 	bs = bs[2:]
 
 	var last Price
-
 	for i := uint16(0); i < resp.Count; i++ {
 		k := &StockKline{
 			Time: GetTime([4]byte(bs[:4]), Type),
