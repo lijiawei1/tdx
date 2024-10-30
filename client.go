@@ -10,6 +10,7 @@ import (
 	"github.com/injoyai/ios/client/dial"
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx/protocol"
+	"sync/atomic"
 	"time"
 )
 
@@ -128,19 +129,13 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 
 }
 
+// SendFrame 发送数据,并等待响应
 func (this *Client) SendFrame(f *protocol.Frame) (any, error) {
-	this.msgID++
-	f.MsgID = this.msgID
+	f.MsgID = atomic.AddUint32(&this.msgID, 1)
 	if _, err := this.Client.Write(f.Bytes()); err != nil {
 		return nil, err
 	}
 	return this.Wait.Wait(conv.String(this.msgID))
-}
-
-func (this *Client) connect() error {
-	f := protocol.MConnect.Frame()
-	_, err := this.Write(f.Bytes())
-	return err
 }
 
 // GetStockCount 获取市场内的股票数量
@@ -155,6 +150,9 @@ func (this *Client) GetStockCount(exchange protocol.Exchange) (*protocol.StockCo
 
 // GetStockList 获取市场内指定范围内的所有证券代码,一次固定返回1000只,上证股票有效范围370-1480
 // 上证前370只是395/399开头的(中证500/总交易等辅助类),在后面的话是一些100开头的国债
+// 600开头的股票是上证A股，属于大盘股，其中6006开头的股票是最早上市的股票， 6016开头的股票为大盘蓝筹股；900开头的股票是上证B股；
+// 000开头的股票是深证A股，001、002开头的股票也都属于深证A股， 其中002开头的股票是深证A股中小企业股票；200开头的股票是深证B股；
+// 300开头的股票是创业板股票；400开头的股票是三板市场股票。
 func (this *Client) GetStockList(exchange protocol.Exchange, start uint16) (*protocol.StockListResp, error) {
 	f := protocol.MStockList.Frame(exchange, start)
 	result, err := this.SendFrame(f)
@@ -162,6 +160,24 @@ func (this *Client) GetStockList(exchange protocol.Exchange, start uint16) (*pro
 		return nil, err
 	}
 	return result.(*protocol.StockListResp), nil
+}
+
+// GetStockAll 通过多次请求的方式获取全部证券代码
+func (this *Client) GetStockAll(exchange protocol.Exchange) (*protocol.StockListResp, error) {
+	resp := &protocol.StockListResp{}
+	maxSize := uint16(1000)
+	for start := uint16(0); ; start += maxSize {
+		r, err := this.GetStockList(exchange, start)
+		if err != nil {
+			return nil, err
+		}
+		resp.Count += r.Count
+		resp.List = append(resp.List, r.List...)
+		if r.Count < maxSize {
+			break
+		}
+	}
+	return resp, nil
 }
 
 // GetStockQuotes 获取盘口五档报价
@@ -284,6 +300,11 @@ func (this *Client) GetStockKline15Minute(req *protocol.StockKlineReq) (*protoco
 // GetStockKline30Minute 获取三十分钟k线数据
 func (this *Client) GetStockKline30Minute(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
 	return this.GetStockKline(protocol.TypeKline30Minute, req)
+}
+
+// GetStockKlineHour 获取小时k线数据
+func (this *Client) GetStockKlineHour(req *protocol.StockKlineReq) (*protocol.StockKlineResp, error) {
+	return this.GetStockKline(protocol.TypeKlineHour, req)
 }
 
 // GetStockKlineDay 获取日k线数据

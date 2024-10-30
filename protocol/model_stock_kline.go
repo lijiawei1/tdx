@@ -37,7 +37,7 @@ type StockKline struct {
 	Open   Price     //开盘价
 	High   Price     //最高价
 	Low    Price     //最低价
-	Close  Price     //收盘价
+	Close  Price     //收盘价,如果是当天,则是最新价/实时价
 	Volume float64   //成交量
 	Amount float64   //成交额
 	Time   time.Time //时间
@@ -100,9 +100,7 @@ func (stockKline) Decode(bs []byte, Type TypeKline) (*StockKlineResp, error) {
 
 		last = last + open + _close
 
-		//logs.Debug(Reverse(bs[:4]), getVolume(Uint32(bs[:4])))
-		//logs.Debug(Reverse(bs[4:8]), getVolume(Uint32(bs[4:8])))
-		k.Volume = getVolume(Uint32(bs[:4])) / 100
+		k.Volume = getVolume(Uint32(bs[:4]))
 		k.Amount = getVolume(Uint32(bs[4:8]))
 
 		bs = bs[8:]

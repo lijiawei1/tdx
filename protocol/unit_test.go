@@ -17,3 +17,8 @@ func TestUTF8ToGBK(t *testing.T) {
 	bs = UTF8ToGBK(bs)
 	t.Log(string(bs))
 }
+
+func Test_getVolume(t *testing.T) {
+	t.Log(getVolume(1237966432))
+	t.Log(getVolume(1237966432))
+}
