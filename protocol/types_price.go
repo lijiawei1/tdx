@@ -4,11 +4,15 @@ import (
 	"fmt"
 )
 
-// Price 价格，单位分
+// Price 价格，单位分,分时成交的总金额可能会超出范围，后续改成int64
 type Price int32
 
 func (this Price) Float64() float64 {
 	return float64(this) / 100
+}
+
+func (this Price) Int64() int64 {
+	return int64(this)
 }
 
 func (this Price) String() string {
