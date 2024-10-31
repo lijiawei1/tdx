@@ -9,7 +9,11 @@ import (
 
 func main() {
 	common.Test(func(c *tdx.Client) {
-		resp, err := c.GetStockKlineDayAll(protocol.ExchangeSH, "000001")
+		resp, err := c.GetHistoryMinuteTradeAll(protocol.HistoryMinuteTradeAllReq{
+			Date:     "20241027",
+			Exchange: protocol.ExchangeSZ,
+			Code:     "000001",
+		})
 		logs.PanicErr(err)
 
 		for _, v := range resp.List {

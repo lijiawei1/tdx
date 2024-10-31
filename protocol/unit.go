@@ -81,7 +81,7 @@ func GetHourMinute(bs [2]byte) string {
 	return fmt.Sprintf("%02d:%02d", h, m)
 }
 
-func GetTime(bs [4]byte, Type TypeKline) time.Time {
+func GetTime(bs [4]byte, Type uint8) time.Time {
 	switch Type {
 	case TypeKlineDay2, TypeKlineMinute, TypeKlineMinute2:
 

@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-type StockQuotesResp []*StockQuote
+type QuotesResp []*Quote
 
-func (this StockQuotesResp) String() string {
+func (this QuotesResp) String() string {
 	ls := []string(nil)
 	for _, v := range this {
 		ls = append(ls, v.String())
@@ -16,7 +16,7 @@ func (this StockQuotesResp) String() string {
 	return strings.Join(ls, "\n")
 }
 
-type StockQuote struct {
+type Quote struct {
 	Exchange       Exchange // 市场
 	Code           string   // 股票代码 6个ascii字符串
 	Active1        uint16   // 活跃度
@@ -45,7 +45,7 @@ type StockQuote struct {
 	Active2        uint16  // 活跃度
 }
 
-func (this *StockQuote) String() string {
+func (this *Quote) String() string {
 	return fmt.Sprintf(`%s%s
 %s
 总量：%s, 现量：%s, 总金额：%s, 内盘：%s, 外盘：%s
@@ -58,12 +58,12 @@ func (this *StockQuote) String() string {
 	)
 }
 
-type stockQuote struct{}
+type quote struct{}
 
-func (this stockQuote) Frame(m map[Exchange]string) (*Frame, error) {
+func (this quote) Frame(m map[Exchange]string) (*Frame, error) {
 	f := &Frame{
 		Control: Control01,
-		Type:    TypeStockQuote,
+		Type:    TypeQuote,
 		Data:    []byte{0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	}
 
@@ -105,11 +105,11 @@ b212 昨天收盘价1186
 8defd10c 服务时间
 c005bed2668e05be15804d8ba12cb3b13a0083c3034100badc029d014201bc990384f70443029da503b7af074403a6e501b9db044504a6e2028dd5048d050000000000005909
 */
-func (this stockQuote) Decode(bs []byte) StockQuotesResp {
+func (this quote) Decode(bs []byte) QuotesResp {
 
 	//logs.Debug(hex.EncodeToString(bs))
 
-	resp := StockQuotesResp{}
+	resp := QuotesResp{}
 
 	//前2字节是什么?
 	bs = bs[2:]
@@ -118,7 +118,7 @@ func (this stockQuote) Decode(bs []byte) StockQuotesResp {
 	bs = bs[2:]
 
 	for i := uint16(0); i < number; i++ {
-		sec := &StockQuote{
+		sec := &Quote{
 			Exchange: Exchange(bs[0]),
 			Code:     string(UTF8ToGBK(bs[1:7])),
 			Active1:  Uint16(bs[7:9]),

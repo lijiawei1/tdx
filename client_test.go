@@ -23,9 +23,14 @@ func init() {
 }
 
 func TestClient_GetStockHistoryMinuteTrade(t *testing.T) {
-	ti := time.Date(2024, 10, 28, 0, 0, 0, 0, time.Local)
 	do(func(c *Client) {
-		resp, err := c.GetStockHistoryMinuteTrade(ti, protocol.ExchangeSH, "000001", 0, 100)
+		resp, err := c.GetStockHistoryMinuteTrade(protocol.StockHistoryMinuteTradeReq{
+			Time:     time.Date(2024, 10, 28, 0, 0, 0, 0, time.Local),
+			Exchange: protocol.ExchangeSZ,
+			Code:     "000001",
+			Start:    0,
+			Count:    100,
+		})
 		if err != nil {
 			t.Error(err)
 			return

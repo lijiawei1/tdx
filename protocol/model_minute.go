@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-type StockMinuteResp struct {
+type MinuteResp struct {
 	Count uint16
 	List  []PriceNumber
 }
@@ -14,9 +14,9 @@ type PriceNumber struct {
 	Number int
 }
 
-type stockMinute struct{}
+type minute struct{}
 
-func (this *stockMinute) Frame(exchange Exchange, code string) (*Frame, error) {
+func (this *minute) Frame(exchange Exchange, code string) (*Frame, error) {
 	if len(code) != 6 {
 		return nil, errors.New("股票代码长度错误")
 	}
@@ -24,18 +24,18 @@ func (this *stockMinute) Frame(exchange Exchange, code string) (*Frame, error) {
 	codeBs = append(codeBs, 0x0, 0x0, 0x0, 0x0)
 	return &Frame{
 		Control: Control01,
-		Type:    TypeStockMinute,
+		Type:    TypeMinute,
 		Data:    append([]byte{exchange.Uint8(), 0x0}, codeBs...),
 	}, nil
 }
 
-func (this *stockMinute) Decode(bs []byte) (*StockMinuteResp, error) {
+func (this *minute) Decode(bs []byte) (*MinuteResp, error) {
 
 	if len(bs) < 6 {
 		return nil, errors.New("数据长度不足")
 	}
 
-	resp := &StockMinuteResp{
+	resp := &MinuteResp{
 		Count: Uint16(bs[:2]),
 	}
 	//2-6字节是啥?

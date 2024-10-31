@@ -5,12 +5,12 @@ import (
 	"fmt"
 )
 
-type StockListResp struct {
+type CodeResp struct {
 	Count uint16
-	List  []*Stock
+	List  []*Code
 }
 
-type Stock struct {
+type Code struct {
 	Name     string  //股票名称
 	Code     string  //股票代码
 	Multiple uint16  //倍数,基本是0x64=100
@@ -18,33 +18,33 @@ type Stock struct {
 	PreClose float64 //未知
 }
 
-func (this *Stock) String() string {
+func (this *Code) String() string {
 	return fmt.Sprintf("%s(%s)", this.Code, this.Name)
 }
 
-type stockList struct{}
+type code struct{}
 
-func (stockList) Frame(exchange Exchange, start uint16) *Frame {
+func (code) Frame(exchange Exchange, start uint16) *Frame {
 	return &Frame{
 		Control: Control01,
-		Type:    TypeStockList,
+		Type:    TypeCode,
 		Data:    []byte{exchange.Uint8(), 0x0, uint8(start), uint8(start >> 8)},
 	}
 }
 
-func (stockList) Decode(bs []byte) (*StockListResp, error) {
+func (code) Decode(bs []byte) (*CodeResp, error) {
 
 	if len(bs) < 2 {
 		return nil, errors.New("数据长度不足")
 	}
 
-	resp := &StockListResp{
+	resp := &CodeResp{
 		Count: Uint16(bs[:2]),
 	}
 	bs = bs[2:]
 
 	for i := uint16(0); i < resp.Count; i++ {
-		sec := &Stock{
+		sec := &Code{
 			Code:     string(bs[:6]),
 			Multiple: Uint16(bs[6:8]),
 			Name:     string(UTF8ToGBK(bs[8:16])),

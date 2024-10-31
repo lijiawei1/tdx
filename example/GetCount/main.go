@@ -10,7 +10,7 @@ func main() {
 	c, err := tdx.Dial("124.71.187.122:7709")
 	logs.PanicErr(err)
 
-	resp, err := c.GetStockCount(protocol.ExchangeSH)
+	resp, err := c.GetCount(protocol.ExchangeSH)
 	logs.PanicErr(err)
 
 	logs.Debug(resp.Count)
