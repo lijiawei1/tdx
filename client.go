@@ -12,6 +12,7 @@ import (
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx/protocol"
 	"runtime/debug"
+	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -32,6 +33,9 @@ func WithRedial(b ...bool) client.Option {
 
 // Dial 与服务器建立连接
 func Dial(addr string, op ...client.Option) (cli *Client, err error) {
+	if !strings.Contains(addr, ":") {
+		addr += ":7709"
+	}
 
 	cli = &Client{
 		Wait: wait.New(time.Second * 2),
