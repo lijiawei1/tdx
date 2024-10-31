@@ -10,7 +10,7 @@ type StockMinuteTradeResp struct {
 	List  []*StockMinuteTrade
 }
 
-// StockMinuteTrade 分时成交，todo 时间没有到秒，客户端上也没有
+// StockMinuteTrade 分时成交，todo 时间没有到秒，客户端上也没有,东方客户端能显示秒
 type StockMinuteTrade struct {
 	Time   string //时间
 	Price  Price  //价格
@@ -20,16 +20,12 @@ type StockMinuteTrade struct {
 }
 
 func (this *StockMinuteTrade) String() string {
-	return fmt.Sprintf("%s \t%s \t%-6s \t%-6d(手) \t%-4d(单) \t%-4s", this.Time, this.Price, FloatUnitString(float64(this.Amount2())/100), this.Volume, this.Number, this.StatusString())
+	return fmt.Sprintf("%s \t%s \t%-6s \t%-6d(手) \t%-4d(单) \t%-4s", this.Time, this.Price, this.Amount(), this.Volume, this.Number, this.StatusString())
 }
 
 // Amount 成交额
 func (this *StockMinuteTrade) Amount() Price {
 	return this.Price * Price(this.Volume) * 100
-}
-
-func (this *StockMinuteTrade) Amount2() int64 {
-	return this.Price.Int64() * int64(this.Volume) * 100
 }
 
 func (this *StockMinuteTrade) StatusString() string {

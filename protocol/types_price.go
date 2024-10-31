@@ -5,7 +5,7 @@ import (
 )
 
 // Price 价格，单位分,分时成交的总金额可能会超出范围，后续改成int64
-type Price int32
+type Price int64
 
 func (this Price) Float64() float64 {
 	return float64(this) / 100
@@ -16,6 +16,7 @@ func (this Price) Int64() int64 {
 }
 
 func (this Price) String() string {
+	return fmt.Sprintf("%s元", FloatUnitString(this.Float64()))
 	return fmt.Sprintf("%0.2f元", this.Float64())
 }
 
