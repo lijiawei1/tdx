@@ -28,29 +28,25 @@
 package main
 
 import (
-	"fmt"
-	"github.com/injoyai/tdx"
-	"github.com/injoyai/tdx/protocol"
+  "fmt"
+  "github.com/injoyai/tdx"
 )
 
 func main() {
-	//连接服务器,开启日志,开启断连重试
-	c, err := tdx.Dial("124.71.187.122:7709", tdx.WithDebug(true), tdx.WithRedial(true))
-	if err != nil {
-		panic(err)
-	}
-	resp, err := c.GetStockQuotes(map[protocol.Exchange]string{
-		protocol.ExchangeSZ: "000001",
-		protocol.ExchangeSH: "600008",
-	})
-	if err != nil {
-		panic(err)
-	}
+  //连接服务器,开启日志,开启断连重试
+  c, err := tdx.Dial("124.71.187.122:7709", tdx.WithDebug(), tdx.WithRedial())
+  if err != nil {
+    panic(err)
+  }
+  resp, err := c.GetQuote("sz000001", "sh600008")
+  if err != nil {
+    panic(err)
+  }
 
-	for _, v := range resp {
-		fmt.Printf("%#v\n", v)
-	}
-	<-c.Done()
+  for _, v := range resp {
+    fmt.Printf("%#v\n", v)
+  }
+  <-c.Done()
 }
 
 ```
