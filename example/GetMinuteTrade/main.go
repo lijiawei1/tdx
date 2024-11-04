@@ -9,7 +9,13 @@ import (
 
 func main() {
 	common.Test(func(c *tdx.Client) {
-		resp, err := c.GetStockAll(protocol.ExchangeSZ)
+
+		resp, err := c.GetMinuteTrade(protocol.MinuteTradeReq{
+			Exchange: protocol.ExchangeSZ,
+			Code:     "000001",
+			Start:    0,
+			Count:    100,
+		})
 		logs.PanicErr(err)
 
 		for _, v := range resp.List {
@@ -17,5 +23,6 @@ func main() {
 		}
 
 		logs.Debug("总数：", resp.Count)
+
 	})
 }

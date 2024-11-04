@@ -5,15 +5,15 @@ import (
 )
 
 var (
-	MConnect                 = connect{}
-	MHeart                   = heart{}
-	MStockCount              = stockCount{}
-	MStockQuote              = stockQuote{}
-	MStockList               = stockList{}
-	MStockMinute             = stockMinute{}
-	MStockMinuteTrade        = stockMinuteTrade{}
-	MStockHistoryMinuteTrade = stockHistoryMinuteTrade{}
-	MStockKline              = stockKline{}
+	MConnect            = connect{}
+	MHeart              = heart{}
+	MCount              = count{}
+	MQuote              = quote{}
+	MCode               = code{}
+	MMinute             = minute{}
+	MMinuteTrade        = minuteTrade{}
+	MHistoryMinuteTrade = historyMinuteTrade{}
+	MKline              = kline{}
 )
 
 type ConnectResp struct {
