@@ -280,8 +280,8 @@ func (this *Client) GetHistoryMinuteTradeAll(date, code string) (*protocol.Histo
 }
 
 // GetKline 获取k线数据
-func (this *Client) GetKline(Type uint8, req protocol.KlineReq) (*protocol.KlineResp, error) {
-	f, err := protocol.MKline.Frame(Type, req)
+func (this *Client) GetKline(Type uint8, code string, start, count uint16) (*protocol.KlineResp, error) {
+	f, err := protocol.MKline.Frame(Type, code, start, count)
 	if err != nil {
 		return nil, err
 	}
@@ -293,17 +293,12 @@ func (this *Client) GetKline(Type uint8, req protocol.KlineReq) (*protocol.Kline
 }
 
 // GetKlineAll 获取全部k线数据
-func (this *Client) GetKlineAll(Type uint8, exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
+func (this *Client) GetKlineAll(Type uint8, code string) (*protocol.KlineResp, error) {
 	resp := &protocol.KlineResp{}
 	size := uint16(800)
 	var last *protocol.Kline
-	for i := uint16(0); ; i += size {
-		r, err := this.GetKline(Type, protocol.KlineReq{
-			Exchange: exchange,
-			Code:     code,
-			Start:    i,
-			Count:    size,
-		})
+	for start := uint16(0); ; start += size {
+		r, err := this.GetKline(Type, code, start, size)
 		if err != nil {
 			return nil, err
 		}
@@ -323,101 +318,101 @@ func (this *Client) GetKlineAll(Type uint8, exchange protocol.Exchange, code str
 }
 
 // GetKlineMinute 获取一分钟k线数据
-func (this *Client) GetKlineMinute(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKlineMinute, req)
+func (this *Client) GetKlineMinute(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKlineMinute, code, start, count)
 }
 
 // GetKlineMinuteAll 获取一分钟k线全部数据
-func (this *Client) GetKlineMinuteAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKlineMinute, exchange, code)
+func (this *Client) GetKlineMinuteAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKlineMinute, code)
 }
 
 // GetKline5Minute 获取五分钟k线数据
-func (this *Client) GetKline5Minute(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKline5Minute, req)
+func (this *Client) GetKline5Minute(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKline5Minute, code, start, count)
 }
 
 // GetKline5MinuteAll 获取5分钟k线全部数据
-func (this *Client) GetKline5MinuteAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKline5Minute, exchange, code)
+func (this *Client) GetKline5MinuteAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKline5Minute, code)
 }
 
 // GetKline15Minute 获取十五分钟k线数据
-func (this *Client) GetKline15Minute(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKline15Minute, req)
+func (this *Client) GetKline15Minute(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKline15Minute, code, start, count)
 }
 
 // GetKline15MinuteAll 获取十五分钟k线全部数据
-func (this *Client) GetKline15MinuteAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKline15Minute, exchange, code)
+func (this *Client) GetKline15MinuteAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKline15Minute, code)
 }
 
 // GetKline30Minute 获取三十分钟k线数据
-func (this *Client) GetKline30Minute(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKline30Minute, req)
+func (this *Client) GetKline30Minute(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKline30Minute, code, start, count)
 }
 
 // GetKline30MinuteAll 获取三十分钟k线全部数据
-func (this *Client) GetKline30MinuteAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKline30Minute, exchange, code)
+func (this *Client) GetKline30MinuteAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKline30Minute, code)
 }
 
 // GetKlineHour 获取小时k线数据
-func (this *Client) GetKlineHour(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKlineHour, req)
+func (this *Client) GetKlineHour(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKlineHour, code, start, count)
 }
 
 // GetKlineHourAll 获取小时k线全部数据
-func (this *Client) GetKlineHourAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKlineHour, exchange, code)
+func (this *Client) GetKlineHourAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKlineHour, code)
 }
 
 // GetKlineDay 获取日k线数据
-func (this *Client) GetKlineDay(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKlineDay, req)
+func (this *Client) GetKlineDay(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKlineDay, code, start, count)
 }
 
 // GetKlineDayAll 获取日k线全部数据
-func (this *Client) GetKlineDayAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKlineDay, exchange, code)
+func (this *Client) GetKlineDayAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKlineDay, code)
 }
 
 // GetKlineWeek 获取周k线数据
-func (this *Client) GetKlineWeek(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKlineWeek, req)
+func (this *Client) GetKlineWeek(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKlineWeek, code, start, count)
 }
 
 // GetKlineWeekAll 获取周k线全部数据
-func (this *Client) GetKlineWeekAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKlineWeek, exchange, code)
+func (this *Client) GetKlineWeekAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKlineWeek, code)
 }
 
 // GetStockKlineMonth 获取月k线数据
-func (this *Client) GetStockKlineMonth(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKlineMonth, req)
+func (this *Client) GetStockKlineMonth(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKlineMonth, code, start, count)
 }
 
 // GetKlineMonthAll 获取月k线全部数据
-func (this *Client) GetKlineMonthAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKlineMonth, exchange, code)
+func (this *Client) GetKlineMonthAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKlineMonth, code)
 }
 
 // GetKlineQuarter 获取季k线数据
-func (this *Client) GetKlineQuarter(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKlineQuarter, req)
+func (this *Client) GetKlineQuarter(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKlineQuarter, code, start, count)
 }
 
 // GetKlineQuarterAll 获取季k线全部数据
-func (this *Client) GetKlineQuarterAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKlineQuarter, exchange, code)
+func (this *Client) GetKlineQuarterAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKlineQuarter, code)
 }
 
 // GetKlineYear 获取年k线数据
-func (this *Client) GetKlineYear(req protocol.KlineReq) (*protocol.KlineResp, error) {
-	return this.GetKline(protocol.TypeKlineYear, req)
+func (this *Client) GetKlineYear(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetKline(protocol.TypeKlineYear, code, start, count)
 }
 
 // GetKlineYearAll 获取年k线数据
-func (this *Client) GetKlineYearAll(exchange protocol.Exchange, code string) (*protocol.KlineResp, error) {
-	return this.GetKlineAll(protocol.TypeKlineYear, exchange, code)
+func (this *Client) GetKlineYearAll(code string) (*protocol.KlineResp, error) {
+	return this.GetKlineAll(protocol.TypeKlineYear, code)
 }

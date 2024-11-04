@@ -78,15 +78,28 @@ func (this *Kline) RiseRate() float64 {
 
 type kline struct{}
 
-func (kline) Frame(Type uint8, req KlineReq) (*Frame, error) {
-	bs, err := req.Bytes(Type)
+func (kline) Frame(Type uint8, code string, start, count uint16) (*Frame, error) {
+	if count > 800 {
+		return nil, errors.New("单次数量不能超过800")
+	}
+
+	exchange, number, err := DecodeCode(code)
 	if err != nil {
 		return nil, err
 	}
+
+	data := []byte{exchange.Uint8(), 0x0}
+	data = append(data, []byte(number)...) //这里怎么是正序了？
+	data = append(data, Type, 0x0)
+	data = append(data, 0x01, 0x0)
+	data = append(data, Bytes(start)...)
+	data = append(data, Bytes(count)...)
+	data = append(data, make([]byte, 10)...) //未知啥含义
+
 	return &Frame{
 		Control: Control01,
 		Type:    TypeKline,
-		Data:    bs,
+		Data:    data,
 	}, nil
 }
 

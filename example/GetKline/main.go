@@ -4,12 +4,11 @@ import (
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx"
 	"github.com/injoyai/tdx/example/common"
-	"github.com/injoyai/tdx/protocol"
 )
 
 func main() {
 	common.Test(func(c *tdx.Client) {
-		resp, err := c.GetKlineDayAll(protocol.ExchangeSH, "000001")
+		resp, err := c.GetKlineDayAll("sz000001")
 		logs.PanicErr(err)
 
 		for _, v := range resp.List {

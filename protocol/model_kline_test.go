@@ -8,12 +8,7 @@ import (
 func Test_stockKline_Frame(t *testing.T) {
 	//预期0c02000000001c001c002d050000303030303031 0900 0100 0000 0a00 00000000000000000000
 	//   0c00000000011c001c002d050000313030303030 0900 0000 0000 0a00 00000000000000000000
-	f, _ := MKline.Frame(TypeKlineDay, KlineReq{
-		Exchange: ExchangeSH,
-		Code:     "000001",
-		Start:    0,
-		Count:    10,
-	})
+	f, _ := MKline.Frame(TypeKlineDay, "sz000001", 0, 10)
 	t.Log(f.Bytes().HEX())
 }
 
