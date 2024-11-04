@@ -10,10 +10,7 @@ import (
 0c02000000011a001a003e05050000000000000002000030303030303101363030303038
 */
 func TestNewSecurityQuotes(t *testing.T) {
-	f, err := MStockQuote.Frame(map[Exchange]string{
-		ExchangeSH: "000001",
-		ExchangeSZ: "600008",
-	})
+	f, err := MQuote.Frame("sz000001", "sh600008")
 	if err != nil {
 		t.Error(err)
 		return
@@ -48,12 +45,12 @@ func Test_getPrice(t *testing.T) {
 0c020000000106000600500400000000
 */
 func Test_securityList_Frame(t *testing.T) {
-	f := MStockList.Frame(ExchangeSH, 0)
+	f := MCode.Frame(ExchangeSH, 0)
 	t.Log(f.Bytes().HEX())
 }
 
 func Test_stockCount_Frame(t *testing.T) {
 	//预期0c0200000001080008004e04000075c73301
 	//   0c0000000001070007004e040075c73301
-	t.Log(MStockCount.Frame(ExchangeSH).Bytes().HEX())
+	t.Log(MCount.Frame(ExchangeSH).Bytes().HEX())
 }
