@@ -42,7 +42,7 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 	}
 
 	cli.Client, err = dial.TCP(addr, func(c *client.Client) {
-		c.Logger.Debug(true)                           //开启日志打印
+		c.Logger.Debug(false)                          //关闭日志打印
 		c.Logger.WithHEX()                             //以HEX显示
 		c.SetOption(op...)                             //自定义选项
 		c.Event.OnReadFrom = protocol.ReadFrom         //分包
