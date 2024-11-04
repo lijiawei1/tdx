@@ -16,7 +16,8 @@
 ### 数据校对
 
 * 日K线校对
-  ![](docs/check_kline.png) ![](docs/check_kline_right.png)
+  ![](docs/check_kline.png) 
+  ![](docs/check_kline_right.png)
 
 * 校对分时成交
   ![](docs/check_trade.png)
