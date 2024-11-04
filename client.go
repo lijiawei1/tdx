@@ -191,8 +191,8 @@ func (this *Client) GetCodeAll(exchange protocol.Exchange) (*protocol.CodeResp, 
 }
 
 // GetQuote 获取盘口五档报价
-func (this *Client) GetQuote(m map[protocol.Exchange]string) (protocol.QuotesResp, error) {
-	f, err := protocol.MQuote.Frame(m)
+func (this *Client) GetQuote(codes ...string) (protocol.QuotesResp, error) {
+	f, err := protocol.MQuote.Frame(codes...)
 	if err != nil {
 		return nil, err
 	}
@@ -204,8 +204,8 @@ func (this *Client) GetQuote(m map[protocol.Exchange]string) (protocol.QuotesRes
 }
 
 // GetMinute 获取分时数据,todo 解析好像不对
-func (this *Client) GetMinute(exchange protocol.Exchange, code string) (*protocol.MinuteResp, error) {
-	f, err := protocol.MMinute.Frame(exchange, code)
+func (this *Client) GetMinute(code string) (*protocol.MinuteResp, error) {
+	f, err := protocol.MMinute.Frame(code)
 	if err != nil {
 		return nil, err
 	}
@@ -217,12 +217,12 @@ func (this *Client) GetMinute(exchange protocol.Exchange, code string) (*protoco
 }
 
 // GetMinuteTrade 获取分时交易详情,服务器最多返回1800条,count-start<=1800
-func (this *Client) GetMinuteTrade(req protocol.MinuteTradeReq) (*protocol.MinuteTradeResp, error) {
-	f, err := protocol.MMinuteTrade.Frame(req)
+func (this *Client) GetMinuteTrade(code string, start, count uint16) (*protocol.MinuteTradeResp, error) {
+	f, err := protocol.MMinuteTrade.Frame(code, start, count)
 	if err != nil {
 		return nil, err
 	}
-	result, err := this.SendFrame(f, req.Code)
+	result, err := this.SendFrame(f, code)
 	if err != nil {
 		return nil, err
 	}
@@ -230,16 +230,11 @@ func (this *Client) GetMinuteTrade(req protocol.MinuteTradeReq) (*protocol.Minut
 }
 
 // GetMinuteTradeAll 获取分时全部交易详情,todo 只做参考 因为交易实时在进行,然后又是分页读取的,所以会出现读取间隔内产生的交易会丢失
-func (this *Client) GetMinuteTradeAll(exchange protocol.Exchange, code string) (*protocol.MinuteTradeResp, error) {
+func (this *Client) GetMinuteTradeAll(code string) (*protocol.MinuteTradeResp, error) {
 	resp := &protocol.MinuteTradeResp{}
 	size := uint16(1800)
 	for start := uint16(0); ; start += size {
-		r, err := this.GetMinuteTrade(protocol.MinuteTradeReq{
-			Exchange: exchange,
-			Code:     code,
-			Start:    start,
-			Count:    size,
-		})
+		r, err := this.GetMinuteTrade(code, start, size)
 		if err != nil {
 			return nil, err
 		}
@@ -254,12 +249,12 @@ func (this *Client) GetMinuteTradeAll(exchange protocol.Exchange, code string) (
 }
 
 // GetHistoryMinuteTrade 获取历史分时交易,,只能获取昨天及之前的数据,服务器最多返回2000条,count-start<=2000,如果日期输入错误,则返回0
-func (this *Client) GetHistoryMinuteTrade(req protocol.HistoryMinuteTradeReq) (*protocol.HistoryMinuteTradeResp, error) {
-	f, err := protocol.MHistoryMinuteTrade.Frame(req)
+func (this *Client) GetHistoryMinuteTrade(date, code string, start, count uint16) (*protocol.HistoryMinuteTradeResp, error) {
+	f, err := protocol.MHistoryMinuteTrade.Frame(date, code, start, count)
 	if err != nil {
 		return nil, err
 	}
-	result, err := this.SendFrame(f, req.Code)
+	result, err := this.SendFrame(f, code)
 	if err != nil {
 		return nil, err
 	}
@@ -267,17 +262,11 @@ func (this *Client) GetHistoryMinuteTrade(req protocol.HistoryMinuteTradeReq) (*
 }
 
 // GetHistoryMinuteTradeAll 获取历史分时全部交易,通过多次请求来拼接,只能获取昨天及之前的数据
-func (this *Client) GetHistoryMinuteTradeAll(req protocol.HistoryMinuteTradeAllReq) (*protocol.HistoryMinuteTradeResp, error) {
+func (this *Client) GetHistoryMinuteTradeAll(date, code string) (*protocol.HistoryMinuteTradeResp, error) {
 	resp := &protocol.HistoryMinuteTradeResp{}
 	size := uint16(2000)
 	for start := uint16(0); ; start += size {
-		r, err := this.GetHistoryMinuteTrade(protocol.HistoryMinuteTradeReq{
-			Date:     req.Date,
-			Exchange: req.Exchange,
-			Code:     req.Code,
-			Start:    start,
-			Count:    size,
-		})
+		r, err := this.GetHistoryMinuteTrade(date, code, start, size)
 		if err != nil {
 			return nil, err
 		}

@@ -5,23 +5,6 @@ import (
 	"fmt"
 )
 
-type MinuteTradeReq struct {
-	Exchange Exchange
-	Code     string
-	Start    uint16
-	Count    uint16
-}
-
-func (req MinuteTradeReq) Check() error {
-	if len(req.Code) != 6 {
-		return errors.New("股票代码长度错误")
-	}
-	if req.Count > 1800 {
-		return errors.New("数量不能超过1800")
-	}
-	return nil
-}
-
 type MinuteTradeResp struct {
 	Count uint16
 	List  []*MinuteTrade
@@ -79,21 +62,29 @@ func (this *MinuteTrade) IsSell() bool {
 
 type minuteTrade struct{}
 
-func (minuteTrade) Frame(req MinuteTradeReq) (*Frame, error) {
-	if err := req.Check(); err != nil {
+func (minuteTrade) Frame(code string, start, count uint16) (*Frame, error) {
+	exchange, number, err := DecodeCode(code)
+	if err != nil {
 		return nil, err
 	}
-	codeBs := []byte(req.Code)
-	codeBs = append(codeBs, Bytes(req.Start)...)
-	codeBs = append(codeBs, Bytes(req.Count)...)
+
+	codeBs := []byte(number)
+	codeBs = append(codeBs, Bytes(start)...)
+	codeBs = append(codeBs, Bytes(count)...)
 	return &Frame{
 		Control: Control01,
 		Type:    TypeMinuteTrade,
-		Data:    append([]byte{req.Exchange.Uint8(), 0x0}, codeBs...),
+		Data:    append([]byte{exchange.Uint8(), 0x0}, codeBs...),
 	}, nil
 }
 
 func (minuteTrade) Decode(bs []byte, code string) (*MinuteTradeResp, error) {
+
+	var err error
+	_, code, err = DecodeCode(code)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(bs) < 2 {
 		return nil, errors.New("数据长度不足")

@@ -84,7 +84,7 @@ func Decode(bs []byte) (*Response, error) {
 	}
 
 	if resp.Control&0x10 != 0x10 {
-		return nil, fmt.Errorf("请求失败,请检查参数")
+		//return nil, fmt.Errorf("请求失败,请检查参数")
 	}
 
 	if int(resp.ZipLength) != len(bs[16:]) {

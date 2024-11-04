@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -60,20 +59,22 @@ func (this *Quote) String() string {
 
 type quote struct{}
 
-func (this quote) Frame(m map[Exchange]string) (*Frame, error) {
+func (this quote) Frame(codes ...string) (*Frame, error) {
 	f := &Frame{
 		Control: Control01,
 		Type:    TypeQuote,
 		Data:    []byte{0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	}
 
-	payload := Bytes(uint16(len(m)))
-	for k, v := range m {
-		if len(v) != 6 {
-			return nil, errors.New("股票代码长度错误")
+	payload := Bytes(uint16(len(codes)))
+	for _, v := range codes {
+		exchange, code, err := DecodeCode(v)
+		if err != nil {
+			return nil, err
 		}
-		payload = append(payload, k.Uint8())
-		payload = append(payload, v...)
+
+		payload = append(payload, exchange.Uint8())
+		payload = append(payload, code...)
 	}
 	f.Data = append(f.Data, payload...)
 

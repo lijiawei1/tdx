@@ -16,11 +16,12 @@ type PriceNumber struct {
 
 type minute struct{}
 
-func (this *minute) Frame(exchange Exchange, code string) (*Frame, error) {
-	if len(code) != 6 {
-		return nil, errors.New("股票代码长度错误")
+func (this *minute) Frame(code string) (*Frame, error) {
+	exchange, number, err := DecodeCode(code)
+	if err != nil {
+		return nil, err
 	}
-	codeBs := []byte(code)
+	codeBs := []byte(number)
 	codeBs = append(codeBs, 0x0, 0x0, 0x0, 0x0)
 	return &Frame{
 		Control: Control01,

@@ -2,7 +2,6 @@ package tdx
 
 import (
 	"github.com/injoyai/logs"
-	"github.com/injoyai/tdx/protocol"
 	"testing"
 )
 
@@ -23,13 +22,7 @@ func init() {
 
 func TestClient_GetStockHistoryMinuteTrade(t *testing.T) {
 	do(func(c *Client) {
-		resp, err := c.GetHistoryMinuteTrade(protocol.HistoryMinuteTradeReq{
-			Date:     "20241028",
-			Exchange: protocol.ExchangeSZ,
-			Code:     "000001",
-			Start:    0,
-			Count:    100,
-		})
+		resp, err := c.GetHistoryMinuteTrade("20241028", "sz000001", 0, 100)
 		if err != nil {
 			t.Error(err)
 			return

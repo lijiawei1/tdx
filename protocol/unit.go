@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/transform"
 	"io"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -46,6 +47,20 @@ func UTF8ToGBK(text []byte) []byte {
 	decoder := transform.NewReader(r, simplifiedchinese.GBK.NewDecoder()) //GB18030
 	content, _ := io.ReadAll(decoder)
 	return bytes.ReplaceAll(content, []byte{0x00}, []byte{})
+}
+
+func DecodeCode(code string) (Exchange, string, error) {
+	if len(code) != 8 {
+		return 0, "", fmt.Errorf("股票代码长度错误,例如:SZ000001")
+	}
+	switch strings.ToLower(code[:2]) {
+	case ExchangeSH.String():
+		return ExchangeSH, code[2:], nil
+	case ExchangeSZ.String():
+		return ExchangeSZ, code[2:], nil
+	default:
+		return 0, "", fmt.Errorf("股票代码错误,例如:SZ000001")
+	}
 }
 
 func FloatUnit(f float64) (float64, string) {

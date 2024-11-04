@@ -4,16 +4,11 @@ import (
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx"
 	"github.com/injoyai/tdx/example/common"
-	"github.com/injoyai/tdx/protocol"
 )
 
 func main() {
 	common.Test(func(c *tdx.Client) {
-		resp, err := c.GetHistoryMinuteTradeAll(protocol.HistoryMinuteTradeAllReq{
-			Date:     "20241027",
-			Exchange: protocol.ExchangeSZ,
-			Code:     "000001",
-		})
+		resp, err := c.GetHistoryMinuteTradeAll("20241025", "sz000001")
 		logs.PanicErr(err)
 
 		for _, v := range resp.List {

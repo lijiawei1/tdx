@@ -6,29 +6,6 @@ import (
 	"github.com/injoyai/conv"
 )
 
-// HistoryMinuteTradeAllReq 获取指定日期全部数据的请求参数
-type HistoryMinuteTradeAllReq struct {
-	Date     string //20241030
-	Exchange Exchange
-	Code     string
-}
-
-// HistoryMinuteTradeReq 获取指定日期分页数据的请求参数
-type HistoryMinuteTradeReq struct {
-	Date     string //20241030
-	Exchange Exchange
-	Code     string
-	Start    uint16
-	Count    uint16
-}
-
-func (req HistoryMinuteTradeReq) Check() error {
-	if req.Count > 2000 {
-		return errors.New("数量不能超过2000")
-	}
-	return nil
-}
-
 // HistoryMinuteTradeResp 历史分时交易比实时少了单量
 type HistoryMinuteTradeResp struct {
 	Count uint16
@@ -64,16 +41,16 @@ func (this *HistoryMinuteTrade) StatusString() string {
 
 type historyMinuteTrade struct{}
 
-func (historyMinuteTrade) Frame(req HistoryMinuteTradeReq) (*Frame, error) {
-	if err := req.Check(); err != nil {
+func (historyMinuteTrade) Frame(date, code string, start, count uint16) (*Frame, error) {
+	exchange, number, err := DecodeCode(code)
+	if err != nil {
 		return nil, err
 	}
-	date := conv.Uint32(req.Date) //req.Time.Format("20060102"))
-	dataBs := Bytes(date)
-	dataBs = append(dataBs, req.Exchange.Uint8(), 0x0)
-	dataBs = append(dataBs, []byte(req.Code)...)
-	dataBs = append(dataBs, Bytes(req.Start)...)
-	dataBs = append(dataBs, Bytes(req.Count)...)
+	dataBs := Bytes(conv.Uint32(date)) //req.Time.Format("20060102"))
+	dataBs = append(dataBs, exchange.Uint8(), 0x0)
+	dataBs = append(dataBs, []byte(number)...)
+	dataBs = append(dataBs, Bytes(start)...)
+	dataBs = append(dataBs, Bytes(count)...)
 	return &Frame{
 		Control: Control01,
 		Type:    TypeHistoryMinuteTrade,
@@ -84,6 +61,11 @@ func (historyMinuteTrade) Frame(req HistoryMinuteTradeReq) (*Frame, error) {
 func (historyMinuteTrade) Decode(bs []byte, code string) (*HistoryMinuteTradeResp, error) {
 	if len(bs) < 2 {
 		return nil, errors.New("数据长度不足")
+	}
+
+	_, number, err := DecodeCode(code)
+	if err != nil {
+		return nil, err
 	}
 
 	resp := &HistoryMinuteTradeResp{
@@ -101,7 +83,7 @@ func (historyMinuteTrade) Decode(bs []byte, code string) (*HistoryMinuteTradeRes
 		var sub Price
 		bs, sub = GetPrice(bs[2:])
 		lastPrice += sub
-		mt.Price = lastPrice / basePrice(code)
+		mt.Price = lastPrice / basePrice(number)
 		bs, mt.Volume = CutInt(bs)
 		bs, mt.Status = CutInt(bs)
 		bs, _ = CutInt(bs) //这个得到的是0，不知道是啥

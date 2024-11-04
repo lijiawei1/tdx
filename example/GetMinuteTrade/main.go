@@ -4,18 +4,12 @@ import (
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx"
 	"github.com/injoyai/tdx/example/common"
-	"github.com/injoyai/tdx/protocol"
 )
 
 func main() {
 	common.Test(func(c *tdx.Client) {
 
-		resp, err := c.GetMinuteTrade(protocol.MinuteTradeReq{
-			Exchange: protocol.ExchangeSZ,
-			Code:     "000001",
-			Start:    0,
-			Count:    100,
-		})
+		resp, err := c.GetMinuteTrade("sz000001", 0, 100)
 		logs.PanicErr(err)
 
 		for _, v := range resp.List {
