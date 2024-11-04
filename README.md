@@ -39,8 +39,8 @@ func main() {
 		panic(err)
 	}
 	resp, err := c.GetStockQuotes(map[protocol.Exchange]string{
-		protocol.ExchangeSH: "000001",
-		protocol.ExchangeSZ: "600008",
+		protocol.ExchangeSZ: "000001",
+		protocol.ExchangeSH: "600008",
 	})
 	if err != nil {
 		panic(err)
