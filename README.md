@@ -1,6 +1,7 @@
 ### 拉取通达信的数据
 
-### 参考 https://github.com/bensema/gotdx
+1. 参考 https://github.com/bensema/gotdx
+2. 参考 https://github.com/mootdx/mootdx
 
 ### 开发进度
 
@@ -16,7 +17,7 @@
 ### 数据校对
 
 * 日K线校对
-  ![](docs/check_kline.png) 
+  ![](docs/check_kline.png)
   ![](docs/check_kline_right.png)
 
 * 校对分时成交
@@ -28,25 +29,25 @@
 package main
 
 import (
-  "fmt"
-  "github.com/injoyai/tdx"
+	"fmt"
+	"github.com/injoyai/tdx"
 )
 
 func main() {
-  //连接服务器,开启日志,开启断连重试
-  c, err := tdx.Dial("124.71.187.122:7709", tdx.WithDebug(), tdx.WithRedial())
-  if err != nil {
-    panic(err)
-  }
-  resp, err := c.GetQuote("sz000001", "sh600008")
-  if err != nil {
-    panic(err)
-  }
+	//连接服务器,开启日志,开启断连重试
+	c, err := tdx.Dial("124.71.187.122:7709", tdx.WithDebug(), tdx.WithRedial())
+	if err != nil {
+		panic(err)
+	}
+	resp, err := c.GetQuote("sz000001", "sh600008")
+	if err != nil {
+		panic(err)
+	}
 
-  for _, v := range resp {
-    fmt.Printf("%#v\n", v)
-  }
-  <-c.Done()
+	for _, v := range resp {
+		fmt.Printf("%#v\n", v)
+	}
+	<-c.Done()
 }
 
 ```
@@ -82,7 +83,6 @@ func main() {
 | 110.41.2.72     | 2024-11-04 |
 | 110.41.154.219  | 2024-11-04 |
 | 110.41.147.114  | 2024-11-04 |
-| 待补充             | 2024-11-04 |
 
 
 
