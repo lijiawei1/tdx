@@ -46,8 +46,8 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 		c.Logger.WithHEX()                             //以HEX显示
 		c.SetOption(op...)                             //自定义选项
 		c.Event.OnReadFrom = protocol.ReadFrom         //分包
-		c.Event.OnDealMessage = cli.handlerDealMessage //处理分包数据
-		//无数据超时时间是60秒
+		c.Event.OnDealMessage = cli.handlerDealMessage //解析数据并处理
+		//无数据超时时间是60秒,30秒发送一个心跳包
 		c.GoTimerWriter(30*time.Second, func(w ios.MoreWriter) error {
 			bs := protocol.MHeart.Frame().Bytes()
 			_, err := w.Write(bs)
@@ -279,7 +279,7 @@ func (this *Client) GetHistoryMinuteTradeAll(date, code string) (*protocol.Histo
 	return resp, nil
 }
 
-// GetKline 获取k线数据
+// GetKline 获取k线数据,推荐收盘之后获取,否则会获取到当天的数据
 func (this *Client) GetKline(Type uint8, code string, start, count uint16) (*protocol.KlineResp, error) {
 	f, err := protocol.MKline.Frame(Type, code, start, count)
 	if err != nil {
