@@ -6,8 +6,14 @@ import (
 )
 
 func Test(f func(c *tdx.Client)) {
-	c, err := tdx.Dial("124.71.187.122:7709", tdx.WithDebug())
-	logs.PanicErr(err)
-	f(c)
-	<-c.Done()
+	for _, v := range tdx.Hosts {
+		c, err := tdx.Dial(v, tdx.WithDebug())
+		if err != nil {
+			logs.PrintErr(err)
+			continue
+		}
+		f(c)
+		<-c.Done()
+		break
+	}
 }

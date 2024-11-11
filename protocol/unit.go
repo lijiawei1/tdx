@@ -101,7 +101,7 @@ func GetTime(bs [4]byte, Type uint8) time.Time {
 	case TypeKlineDay2, TypeKlineMinute, TypeKlineMinute2:
 
 		yearMonthDay := Uint16(bs[:2])
-		hourMinute := Uint16(bs[:2])
+		hourMinute := Uint16(bs[2:4])
 		year := int(yearMonthDay>>11 + 2004)
 		month := yearMonthDay % 2048 / 100
 		day := int((yearMonthDay % 2048) % 100)
