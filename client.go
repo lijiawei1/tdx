@@ -317,12 +317,12 @@ func (this *Client) GetKlineAll(Type uint8, code string) (*protocol.KlineResp, e
 	return resp, nil
 }
 
-// GetKlineMinute 获取一分钟k线数据
+// GetKlineMinute 获取一分钟k线数据,每次最多800条,最多只能获取24000条数据
 func (this *Client) GetKlineMinute(code string, start, count uint16) (*protocol.KlineResp, error) {
 	return this.GetKline(protocol.TypeKlineMinute, code, start, count)
 }
 
-// GetKlineMinuteAll 获取一分钟k线全部数据
+// GetKlineMinuteAll 获取一分钟k线全部数据,最多只能获取24000条数据
 func (this *Client) GetKlineMinuteAll(code string) (*protocol.KlineResp, error) {
 	return this.GetKlineAll(protocol.TypeKlineMinute, code)
 }
@@ -387,8 +387,8 @@ func (this *Client) GetKlineWeekAll(code string) (*protocol.KlineResp, error) {
 	return this.GetKlineAll(protocol.TypeKlineWeek, code)
 }
 
-// GetStockKlineMonth 获取月k线数据
-func (this *Client) GetStockKlineMonth(code string, start, count uint16) (*protocol.KlineResp, error) {
+// GetKlineMonth 获取月k线数据
+func (this *Client) GetKlineMonth(code string, start, count uint16) (*protocol.KlineResp, error) {
 	return this.GetKline(protocol.TypeKlineMonth, code, start, count)
 }
 
