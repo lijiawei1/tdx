@@ -42,7 +42,7 @@ type Kline struct {
 	High   Price     //最高价
 	Low    Price     //最低价
 	Close  Price     //收盘价,如果是当天,则是最新价/实时价
-	Volume float64   //成交量
+	Volume int64     //成交量
 	Amount float64   //成交额
 	Time   time.Time //时间
 }
@@ -52,7 +52,7 @@ func (this *Kline) String() string {
 		this.Time.Format("2006-01-02 15:04:05"),
 		this.Last, this.Open, this.High, this.Low, this.Close,
 		this.RisePrice(), this.RiseRate(),
-		FloatUnitString(this.Volume), FloatUnitString(this.Amount),
+		Int64UnitString(this.Volume), FloatUnitString(this.Amount),
 	)
 }
 
@@ -137,7 +137,7 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 		k.Low = (open + last + low) / 10
 		last = last + open + _close
 
-		k.Volume = getVolume(Uint32(bs[:4]))
+		k.Volume = int64(getVolume(Uint32(bs[:4])) / 100)
 		k.Amount = getVolume(Uint32(bs[4:8]))
 
 		bs = bs[8:]
