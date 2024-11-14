@@ -7,7 +7,7 @@ import (
 	"github.com/injoyai/conv"
 	"github.com/injoyai/ios"
 	"github.com/injoyai/ios/client"
-	"github.com/injoyai/ios/client/dial"
+	"github.com/injoyai/ios/module/tcp"
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx/protocol"
 	"runtime/debug"
@@ -35,13 +35,18 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 	if !strings.Contains(addr, ":") {
 		addr += ":7709"
 	}
+	return DialWith(tcp.NewDial(addr), op...)
+}
+
+// DialWith 与服务器建立连接
+func DialWith(dial ios.DialFunc, op ...client.Option) (cli *Client, err error) {
 
 	cli = &Client{
 		Wait: wait.New(time.Second * 2),
 		m:    maps.NewSafe(),
 	}
 
-	cli.Client, err = dial.TCP(addr, func(c *client.Client) {
+	cli.Client, err = client.Dial(dial, func(c *client.Client) {
 		c.Logger.Debug(false)                          //关闭日志打印
 		c.Logger.WithHEX()                             //以HEX显示
 		c.SetOption(op...)                             //自定义选项
