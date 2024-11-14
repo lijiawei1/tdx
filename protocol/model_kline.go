@@ -137,8 +137,26 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 		k.Low = (open + last + low) / 10
 		last = last + open + _close
 
-		k.Volume = int64(getVolume(Uint32(bs[:4])) / 100)
-		k.Amount = Price(getVolume(Uint32(bs[4:8])) * 100) //转为分,并去除多余的小数
+		/*
+			发现不同的K线数据处理不一致,测试如下:
+			1分: 需要除以100
+			5分: 需要除以100
+			15分: 需要除以100
+			30分: 需要除以100
+			60分: 需要除以100
+			日: 不需要操作
+			周: 不需要操作
+			月: 不需要操作
+			季: 不需要操作
+			年: 不需要操作
+
+		*/
+		k.Volume = int64(getVolume(Uint32(bs[:4])))
+		switch Type {
+		case TypeKlineMinute, TypeKline5Minute, TypeKline15Minute, TypeKline30Minute, TypeKlineHour:
+			k.Volume /= 100
+		}
+		k.Amount = Price(getVolume(Uint32(bs[4:8])) * 100) //从元转为分,并去除多余的小数
 
 		bs = bs[8:]
 		resp.List = append(resp.List, k)

@@ -51,11 +51,11 @@ const (
 	TypeKline15Minute uint8 = 1  // 15分钟K 线
 	TypeKline30Minute uint8 = 2  // 30分钟K 线
 	TypeKlineHour     uint8 = 3  // 1小时K 线
-	TypeKlineDay2     uint8 = 4  // 日K 线
+	TypeKlineDay2     uint8 = 4  // 日K 线,未知
 	TypeKlineWeek     uint8 = 5  // 周K 线
 	TypeKlineMonth    uint8 = 6  // 月K 线
 	TypeKlineMinute   uint8 = 7  // 1分钟
-	TypeKlineMinute2  uint8 = 8  // 1分钟K 线
+	TypeKlineMinute2  uint8 = 8  // 1分钟K 线,未知
 	TypeKlineDay      uint8 = 9  // 日K 线
 	TypeKlineQuarter  uint8 = 10 // 季K 线
 	TypeKlineYear     uint8 = 11 // 年K 线
