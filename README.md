@@ -93,7 +93,7 @@ func main() {
 | 110.41.154.219  | 2024-11-04 |
 | 110.41.147.114  | 2024-11-04 |
 
-* 从(https://github.com/mootdx/mootdx)复制,未校验
+* 从[`https://github.com/mootdx/mootdx`](https://github.com/mootdx/mootdx)复制,大部分重复,未校验
 ```
   ('深圳双线主站1', '110.41.147.114', 7709),
   ('深圳双线主站2', '8.129.13.54', 7709),
