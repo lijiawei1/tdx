@@ -20,8 +20,12 @@
   ![](docs/check_kline.png)
   ![](docs/check_kline_right.png)
 
+* 所有K线已校验
+
 * 校对分时成交
   ![](docs/check_trade.png)
+
+
 
 ### 如何使用
 
