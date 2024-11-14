@@ -1,31 +1,9 @@
-### 拉取通达信的数据
+### 说明
 
-1. 参考 https://github.com/bensema/gotdx
-2. 参考 https://github.com/mootdx/mootdx
+* 参考golang库 [`https://github.com/bensema/gotdx`](https://github.com/bensema/gotdx)
+* 参考python库 [`https://github.com/mootdx/mootdx`](https://github.com/mootdx/mootdx)
 
-### 开发进度
-
-* 基本信息(5档报价)
-  ![](docs/plan20241025.png)
-* 股票列表
-  ![](docs/plan20241028-1.png)
-* 分时成交
-  ![](docs/plan20241028-2.png)
-* K线
-  ![](docs/plan20241029.png)
-
-### 数据校对
-
-* 日K线校对
-  ![](docs/check_kline.png)
-  ![](docs/check_kline_right.png)
-
-* 所有K线已校验
-
-* 校对分时成交
-  ![](docs/check_trade.png)
-
-
+* 数据入库示例(开发中) [`https://github.com/injoyai/stock`](https://github.com/injoyai/stock)
 
 ### 如何使用
 
@@ -56,7 +34,34 @@ func main() {
 
 ```
 
-#### IP地址
+### 开发进度(一期完成)
+
+* 基本信息(5档报价)
+  ![](docs/plan20241025.png)
+* 股票列表
+  ![](docs/plan20241028-1.png)
+* 分时成交
+  ![](docs/plan20241028-2.png)
+* K线
+  ![](docs/plan20241029.png)
+
+### 数据校对
+
+* 日K线校对
+  ![](docs/check_kline.png)
+  ![](docs/check_kline_right.png)
+
+* 所有K线已校验
+
+* 校对分时成交
+  ![](docs/check_trade.png)
+
+
+
+
+
+
+#### 服务器地址(端口7709)
 
 | IP              | 测试时间       |
 |-----------------|------------|
