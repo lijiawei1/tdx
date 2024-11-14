@@ -153,7 +153,7 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 		*/
 		k.Volume = int64(getVolume(Uint32(bs[:4])))
 		switch Type {
-		case TypeKlineMinute, TypeKline5Minute, TypeKline15Minute, TypeKline30Minute, TypeKlineHour:
+		case TypeKlineMinute, TypeKline5Minute, TypeKlineMinute2, TypeKline15Minute, TypeKline30Minute, TypeKlineHour, TypeKlineDay2:
 			k.Volume /= 100
 		}
 		k.Amount = Price(getVolume(Uint32(bs[4:8])) * 100) //从元转为分,并去除多余的小数
