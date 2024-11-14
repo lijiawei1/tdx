@@ -102,7 +102,7 @@ func GetHourMinute(bs [2]byte) string {
 
 func GetTime(bs [4]byte, Type uint8) time.Time {
 	switch Type {
-	case TypeKlineDay2, TypeKlineMinute, TypeKlineMinute2:
+	case TypeKlineMinute, TypeKlineMinute2, TypeKline5Minute, TypeKline15Minute, TypeKline30Minute, TypeKlineHour:
 
 		yearMonthDay := Uint16(bs[:2])
 		hourMinute := Uint16(bs[2:4])
