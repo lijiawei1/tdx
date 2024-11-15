@@ -16,7 +16,7 @@ type HistoryMinuteTrade struct {
 	Time   string //时间
 	Price  Price  //价格
 	Volume int    //成交量
-	Status int    //0是买，1是卖，2无效（汇总出现）
+	Status int    //0是买，1是卖，2无效（汇总出现）中途也可能出现2,例20241115(sz000001)的14:56
 }
 
 func (this *HistoryMinuteTrade) String() string {
