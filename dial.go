@@ -5,10 +5,9 @@ import (
 	"github.com/injoyai/ios"
 	"net"
 	"strings"
-	"time"
 )
 
-func NewHostDial(hosts []string, timeout time.Duration) ios.DialFunc {
+func NewHostDial(hosts []string) ios.DialFunc {
 	if len(hosts) == 0 {
 		hosts = Hosts
 	}
@@ -23,7 +22,7 @@ func NewHostDial(hosts []string, timeout time.Duration) ios.DialFunc {
 		if !strings.Contains(addr, ":") {
 			addr += ":7709"
 		}
-		c, err := net.DialTimeout("tcp", addr, timeout)
+		c, err := net.Dial("tcp", addr)
 		return c, hosts[index], err
 	}
 }
