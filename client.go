@@ -119,7 +119,7 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 		resp, err = protocol.MMinute.Decode(f.Data)
 
 	case protocol.TypeMinuteTrade:
-		resp, err = protocol.MMinuteTrade.Decode(f.Data, conv.String(val)) //todo
+		resp, err = protocol.MMinuteTrade.Decode(f.Data, conv.String(val))
 
 	case protocol.TypeHistoryMinuteTrade:
 		resp, err = protocol.MHistoryMinuteTrade.Decode(f.Data, conv.String(val))
