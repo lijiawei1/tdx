@@ -23,6 +23,6 @@ func NewHostDial(hosts []string) ios.DialFunc {
 			addr += ":7709"
 		}
 		c, err := net.Dial("tcp", addr)
-		return c, hosts[index], err
+		return c, addr, err
 	}
 }
