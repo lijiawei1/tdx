@@ -22,9 +22,9 @@ type Quote struct {
 	K              K        //k线
 	ServerTime     string   // 时间
 	ReversedBytes0 int      // 保留(时间 ServerTime)
-	ReversedBytes1 int      // 保留
+	ReversedBytes1 int      // 保留 这个等于 负的收盘价格?
 	TotalHand      int      // 总手（东财的盘口-总手）
-	Intuition      int      // 现量（东财的盘口-现量）
+	Intuition      int      // 现量（东财的盘口-现量）现在成交量
 	Amount         float64  // 金额（东财的盘口-金额）
 	InsideDish     int      // 内盘（东财的盘口-外盘）（和东财对不上）
 	OuterDisc      int      // 外盘（东财的盘口-外盘）（和东财对不上）
