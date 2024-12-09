@@ -38,6 +38,11 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 	return DialWith(tcp.NewDial(addr), op...)
 }
 
+// DialHosts 与服务器建立连接,多个服务器轮询,开启重试生效
+func DialHosts(hosts []string, op ...client.Option) (cli *Client, err error) {
+	return DialWith(NewHostDial(hosts), op...)
+}
+
 // DialWith 与服务器建立连接
 func DialWith(dial ios.DialFunc, op ...client.Option) (cli *Client, err error) {
 
@@ -300,6 +305,38 @@ func (this *Client) GetKline(Type uint8, code string, start, count uint16) (*pro
 	return result.(*protocol.KlineResp), nil
 }
 
+// GetKlineUntil 获取k线数据，通过多次请求来拼接,直到满足func返回true
+func (this *Client) GetKlineUntil(Type uint8, code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	resp := &protocol.KlineResp{}
+	size := uint16(800)
+	var last *protocol.Kline
+	for start := uint16(0); ; start += size {
+		r, err := this.GetKline(Type, code, start, size)
+		if err != nil {
+			return nil, err
+		}
+		if last != nil && len(r.List) > 0 {
+			last.Last = r.List[len(r.List)-1].Close
+		}
+		if len(r.List) > 0 {
+			last = r.List[0]
+		}
+		for i := len(r.List) - 1; i >= 0; i-- {
+			if f(r.List[i]) {
+				resp.Count += r.Count - uint16(i)
+				resp.List = append(r.List[i:], resp.List...)
+				return resp, nil
+			}
+		}
+		resp.Count += r.Count
+		resp.List = append(r.List, resp.List...)
+		if r.Count < size {
+			break
+		}
+	}
+	return resp, nil
+}
+
 // GetKlineAll 获取全部k线数据
 func (this *Client) GetKlineAll(Type uint8, code string) (*protocol.KlineResp, error) {
 	resp := &protocol.KlineResp{}
@@ -335,6 +372,10 @@ func (this *Client) GetKlineMinuteAll(code string) (*protocol.KlineResp, error) 
 	return this.GetKlineAll(protocol.TypeKlineMinute, code)
 }
 
+func (this *Client) GetKlineMinuteUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKlineMinute, code, f)
+}
+
 // GetKline5Minute 获取五分钟k线数据
 func (this *Client) GetKline5Minute(code string, start, count uint16) (*protocol.KlineResp, error) {
 	return this.GetKline(protocol.TypeKline5Minute, code, start, count)
@@ -343,6 +384,10 @@ func (this *Client) GetKline5Minute(code string, start, count uint16) (*protocol
 // GetKline5MinuteAll 获取5分钟k线全部数据
 func (this *Client) GetKline5MinuteAll(code string) (*protocol.KlineResp, error) {
 	return this.GetKlineAll(protocol.TypeKline5Minute, code)
+}
+
+func (this *Client) GetKline5MinuteUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKline5Minute, code, f)
 }
 
 // GetKline15Minute 获取十五分钟k线数据
@@ -355,6 +400,10 @@ func (this *Client) GetKline15MinuteAll(code string) (*protocol.KlineResp, error
 	return this.GetKlineAll(protocol.TypeKline15Minute, code)
 }
 
+func (this *Client) GetKline15MinuteUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKline15Minute, code, f)
+}
+
 // GetKline30Minute 获取三十分钟k线数据
 func (this *Client) GetKline30Minute(code string, start, count uint16) (*protocol.KlineResp, error) {
 	return this.GetKline(protocol.TypeKline30Minute, code, start, count)
@@ -363,6 +412,10 @@ func (this *Client) GetKline30Minute(code string, start, count uint16) (*protoco
 // GetKline30MinuteAll 获取三十分钟k线全部数据
 func (this *Client) GetKline30MinuteAll(code string) (*protocol.KlineResp, error) {
 	return this.GetKlineAll(protocol.TypeKline30Minute, code)
+}
+
+func (this *Client) GetKline30MinuteUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKline30Minute, code, f)
 }
 
 // GetKlineHour 获取小时k线数据
@@ -375,6 +428,10 @@ func (this *Client) GetKlineHourAll(code string) (*protocol.KlineResp, error) {
 	return this.GetKlineAll(protocol.TypeKlineHour, code)
 }
 
+func (this *Client) GetKlineHourUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKlineHour, code, f)
+}
+
 // GetKlineDay 获取日k线数据
 func (this *Client) GetKlineDay(code string, start, count uint16) (*protocol.KlineResp, error) {
 	return this.GetKline(protocol.TypeKlineDay, code, start, count)
@@ -383,6 +440,10 @@ func (this *Client) GetKlineDay(code string, start, count uint16) (*protocol.Kli
 // GetKlineDayAll 获取日k线全部数据
 func (this *Client) GetKlineDayAll(code string) (*protocol.KlineResp, error) {
 	return this.GetKlineAll(protocol.TypeKlineDay, code)
+}
+
+func (this *Client) GetKlineDayUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKlineDay, code, f)
 }
 
 // GetKlineWeek 获取周k线数据
@@ -395,6 +456,10 @@ func (this *Client) GetKlineWeekAll(code string) (*protocol.KlineResp, error) {
 	return this.GetKlineAll(protocol.TypeKlineWeek, code)
 }
 
+func (this *Client) GetKlineWeekUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKlineWeek, code, f)
+}
+
 // GetKlineMonth 获取月k线数据
 func (this *Client) GetKlineMonth(code string, start, count uint16) (*protocol.KlineResp, error) {
 	return this.GetKline(protocol.TypeKlineMonth, code, start, count)
@@ -403,6 +468,10 @@ func (this *Client) GetKlineMonth(code string, start, count uint16) (*protocol.K
 // GetKlineMonthAll 获取月k线全部数据
 func (this *Client) GetKlineMonthAll(code string) (*protocol.KlineResp, error) {
 	return this.GetKlineAll(protocol.TypeKlineMonth, code)
+}
+
+func (this *Client) GetKlineMonthUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKlineMonth, code, f)
 }
 
 // GetKlineQuarter 获取季k线数据
@@ -415,6 +484,10 @@ func (this *Client) GetKlineQuarterAll(code string) (*protocol.KlineResp, error)
 	return this.GetKlineAll(protocol.TypeKlineQuarter, code)
 }
 
+func (this *Client) GetKlineQuarterUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKlineQuarter, code, f)
+}
+
 // GetKlineYear 获取年k线数据
 func (this *Client) GetKlineYear(code string, start, count uint16) (*protocol.KlineResp, error) {
 	return this.GetKline(protocol.TypeKlineYear, code, start, count)
@@ -423,4 +496,8 @@ func (this *Client) GetKlineYear(code string, start, count uint16) (*protocol.Kl
 // GetKlineYearAll 获取年k线数据
 func (this *Client) GetKlineYearAll(code string) (*protocol.KlineResp, error) {
 	return this.GetKlineAll(protocol.TypeKlineYear, code)
+}
+
+func (this *Client) GetKlineYearUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetKlineUntil(protocol.TypeKlineYear, code, f)
 }
