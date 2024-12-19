@@ -155,7 +155,7 @@ func (this *Client) SendFrame(f *protocol.Frame, cache ...any) (any, error) {
 	if _, err := this.Client.Write(f.Bytes()); err != nil {
 		return nil, err
 	}
-	return this.Wait.Wait(conv.String(this.msgID))
+	return this.Wait.Wait(conv.String(f.MsgID))
 }
 
 // GetCount 获取市场内的股票数量
