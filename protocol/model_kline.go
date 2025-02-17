@@ -158,7 +158,9 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 		}
 		k.Amount = Price(getVolume(Uint32(bs[4:8])) * 100) //从元转为分,并去除多余的小数
 
+		//指数和股票的差别bs[12:]
 		bs = bs[8:]
+
 		resp.List = append(resp.List, k)
 	}
 
