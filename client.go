@@ -501,21 +501,3 @@ func (this *Client) GetKlineYearAll(code string) (*protocol.KlineResp, error) {
 func (this *Client) GetKlineYearUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
 	return this.GetKlineUntil(protocol.TypeKlineYear, code, f)
 }
-
-/*
-
-
- */
-
-func (this *Client) GetIndex(Type uint8, code string, start, count uint16) (*protocol.IndexResp, error) {
-	//f, err := protocol.MIndex.Frame(Type, code, start, count)
-	//if err != nil {
-	//	return nil, err
-	//}
-	f := protocol.MIndex.Frame()
-	result, err := this.SendFrame(f, Type)
-	if err != nil {
-		return nil, err
-	}
-	return result.(*protocol.IndexResp), nil
-}
