@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/injoyai/base/g"
+	"github.com/injoyai/conv"
+	"github.com/injoyai/logs"
 	"time"
 )
 
@@ -37,14 +39,16 @@ type KlineResp struct {
 }
 
 type Kline struct {
-	Last   Price     //昨日收盘价,这个是列表的上一条数据的收盘价，如果没有上条数据，那么这个值为0
-	Open   Price     //开盘价
-	High   Price     //最高价
-	Low    Price     //最低价
-	Close  Price     //收盘价,如果是当天,则是最新价/实时价
-	Volume int64     //成交量
-	Amount Price     //成交额
-	Time   time.Time //时间
+	Last      Price     //昨日收盘价,这个是列表的上一条数据的收盘价，如果没有上条数据，那么这个值为0
+	Open      Price     //开盘价
+	High      Price     //最高价
+	Low       Price     //最低价
+	Close     Price     //收盘价,如果是当天,则是最新价/实时价
+	Volume    int64     //成交量
+	Amount    Price     //成交额
+	Time      time.Time //时间
+	UpCount   int       //上涨数量,指数有效
+	DownCount int       //下跌数量,指数有效
 }
 
 func (this *Kline) String() string {
@@ -112,11 +116,13 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 	resp := &KlineResp{
 		Count: Uint16(bs[:2]),
 	}
-
 	bs = bs[2:]
+
+	logs.Debug(len(bs)) //264 10  237 9
 
 	var last Price //上条数据(昨天)的收盘价
 	for i := uint16(0); i < resp.Count; i++ {
+		logs.Debug(bs[:4])
 		k := &Kline{
 			Time: GetTime([4]byte(bs[:4]), Type),
 		}
@@ -152,14 +158,20 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 
 		*/
 		k.Volume = int64(getVolume(Uint32(bs[:4])))
+		bs = bs[4:]
 		switch Type {
 		case TypeKlineMinute, TypeKline5Minute, TypeKlineMinute2, TypeKline15Minute, TypeKline30Minute, TypeKlineHour, TypeKlineDay2:
 			k.Volume /= 100
 		}
-		k.Amount = Price(getVolume(Uint32(bs[4:8])) * 100) //从元转为分,并去除多余的小数
+		k.Amount = Price(getVolume(Uint32(bs[:4])) * 100) //从元转为分,并去除多余的小数
+		bs = bs[4:]
 
 		//指数和股票的差别bs[12:]
-		bs = bs[8:]
+		if true {
+			k.UpCount = conv.Int([]byte{bs[1], bs[0]})
+			k.DownCount = conv.Int([]byte{bs[3], bs[2]})
+			bs = bs[4:]
+		}
 
 		resp.List = append(resp.List, k)
 	}

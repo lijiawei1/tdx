@@ -14,7 +14,6 @@ var (
 	MMinuteTrade        = minuteTrade{}
 	MHistoryMinuteTrade = historyMinuteTrade{}
 	MKline              = kline{}
-	MIndex              = index{}
 )
 
 type ConnectResp struct {
