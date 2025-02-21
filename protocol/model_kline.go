@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/injoyai/base/g"
 	"github.com/injoyai/conv"
-	"github.com/injoyai/logs"
 	"time"
 )
 
@@ -118,11 +117,10 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 	}
 	bs = bs[2:]
 
-	logs.Debug(len(bs)) //264 10  237 9
+	//logs.Debug(len(bs)) //264 10  237 9
 
 	var last Price //上条数据(昨天)的收盘价
 	for i := uint16(0); i < resp.Count; i++ {
-		logs.Debug(bs[:4])
 		k := &Kline{
 			Time: GetTime([4]byte(bs[:4]), Type),
 		}
@@ -167,7 +165,7 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 		bs = bs[4:]
 
 		//指数和股票的差别bs[12:]
-		if true {
+		if false {
 			k.UpCount = conv.Int([]byte{bs[1], bs[0]})
 			k.DownCount = conv.Int([]byte{bs[3], bs[2]})
 			bs = bs[4:]
