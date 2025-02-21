@@ -106,7 +106,7 @@ func (kline) Frame(Type uint8, code string, start, count uint16) (*Frame, error)
 	}, nil
 }
 
-func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
+func (kline) Decode(bs []byte, c KlineCache) (*KlineResp, error) {
 
 	if len(bs) < 2 {
 		return nil, errors.New("数据长度不足")
@@ -117,12 +117,10 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 	}
 	bs = bs[2:]
 
-	//logs.Debug(len(bs)) //264 10  237 9
-
 	var last Price //上条数据(昨天)的收盘价
 	for i := uint16(0); i < resp.Count; i++ {
 		k := &Kline{
-			Time: GetTime([4]byte(bs[:4]), Type),
+			Time: GetTime([4]byte(bs[:4]), c.Type),
 		}
 
 		var open Price
@@ -157,15 +155,15 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 		*/
 		k.Volume = int64(getVolume(Uint32(bs[:4])))
 		bs = bs[4:]
-		switch Type {
+		switch c.Type {
 		case TypeKlineMinute, TypeKline5Minute, TypeKlineMinute2, TypeKline15Minute, TypeKline30Minute, TypeKlineHour, TypeKlineDay2:
 			k.Volume /= 100
 		}
 		k.Amount = Price(getVolume(Uint32(bs[:4])) * 100) //从元转为分,并去除多余的小数
 		bs = bs[4:]
 
-		//指数和股票的差别bs[12:]
-		if false {
+		//指数和股票的差别,指数多解析4字节
+		if !IsStock(c.Code) {
 			k.UpCount = conv.Int([]byte{bs[1], bs[0]})
 			k.DownCount = conv.Int([]byte{bs[3], bs[2]})
 			bs = bs[4:]
@@ -175,4 +173,9 @@ func (kline) Decode(bs []byte, Type uint8) (*KlineResp, error) {
 	}
 
 	return resp, nil
+}
+
+type KlineCache struct {
+	Type uint8
+	Code string
 }

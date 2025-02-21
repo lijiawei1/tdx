@@ -130,7 +130,7 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 		resp, err = protocol.MHistoryMinuteTrade.Decode(f.Data, conv.String(val))
 
 	case protocol.TypeKline:
-		resp, err = protocol.MKline.Decode(f.Data, conv.Uint8(val))
+		resp, err = protocol.MKline.Decode(f.Data, val.(protocol.KlineCache))
 
 	default:
 		err = fmt.Errorf("通讯类型未解析:0x%X", f.Type)
@@ -298,7 +298,7 @@ func (this *Client) GetKline(Type uint8, code string, start, count uint16) (*pro
 	if err != nil {
 		return nil, err
 	}
-	result, err := this.SendFrame(f, Type)
+	result, err := this.SendFrame(f, protocol.KlineCache{Type: Type, Code: code})
 	if err != nil {
 		return nil, err
 	}

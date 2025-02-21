@@ -194,3 +194,20 @@ func getVolume(val uint32) (volume float64) {
 	volume = dbl_xmm6 + dbl_xmm4 + dbl_xmm3 + dbl_xmm1
 	return
 }
+
+func IsStock(code string) bool {
+	if len(code) != 8 {
+		return false
+	}
+	code = strings.ToLower(code)
+	switch {
+	case code[0:2] == ExchangeSH.String() &&
+		(code[2:3] == "6"):
+		return true
+
+	case code[0:2] == ExchangeSZ.String() &&
+		(code[2:3] == "0" || code[2:4] == "30"):
+		return true
+	}
+	return false
+}
