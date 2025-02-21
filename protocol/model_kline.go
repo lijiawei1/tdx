@@ -51,11 +51,12 @@ type Kline struct {
 }
 
 func (this *Kline) String() string {
-	return fmt.Sprintf("%s 昨收盘：%s 开盘价：%s 最高价：%s 最低价：%s 收盘价：%s 涨跌：%s 涨跌幅：%0.2f 成交量：%s 成交额：%s",
+	return fmt.Sprintf("%s 昨收盘：%s 开盘价：%s 最高价：%s 最低价：%s 收盘价：%s 涨跌：%s 涨跌幅：%0.2f 成交量：%s 成交额：%s 涨跌数: %d/%d",
 		this.Time.Format("2006-01-02 15:04:05"),
 		this.Last, this.Open, this.High, this.Low, this.Close,
 		this.RisePrice(), this.RiseRate(),
 		Int64UnitString(this.Volume), FloatUnitString(this.Amount.Float64()),
+		this.UpCount, this.DownCount,
 	)
 }
 
@@ -162,8 +163,9 @@ func (kline) Decode(bs []byte, c KlineCache) (*KlineResp, error) {
 		k.Amount = Price(getVolume(Uint32(bs[:4])) * 100) //从元转为分,并去除多余的小数
 		bs = bs[4:]
 
-		//指数和股票的差别,指数多解析4字节
+		//指数和股票的差别,指数多解析4字节,并处理成交量*100
 		if !IsStock(c.Code) {
+			k.Volume *= 100
 			k.UpCount = conv.Int([]byte{bs[1], bs[0]})
 			k.DownCount = conv.Int([]byte{bs[3], bs[2]})
 			bs = bs[4:]
