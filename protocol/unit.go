@@ -195,6 +195,7 @@ func getVolume(val uint32) (volume float64) {
 	return
 }
 
+// IsStock 是否是股票,示例sz000001
 func IsStock(code string) bool {
 	if len(code) != 8 {
 		return false
