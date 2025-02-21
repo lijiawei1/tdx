@@ -12,8 +12,8 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 	if len(cfg.Hosts) == 0 {
 		cfg.Hosts = Hosts
 	}
-	if cfg.Database == "" {
-		cfg.Database = "./data/"
+	if cfg.Dir == "" {
+		cfg.Dir = "./data/"
 	}
 
 	//连接池
@@ -30,7 +30,7 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 		return nil, err
 	}
 	codesClient.Wait.SetTimeout(time.Second * 5)
-	codes, err := NewCodes(codesClient, filepath.Join(cfg.Database, "database/codes.db"))
+	codes, err := NewCodes(codesClient, filepath.Join(cfg.Dir, "database/codes.db"))
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 		return nil, err
 	}
 	workdayClient.Wait.SetTimeout(time.Second * 5)
-	workday, err := NewWorkday(workdayClient, filepath.Join(cfg.Database, "database/codes.db"))
+	workday, err := NewWorkday(workdayClient, filepath.Join(cfg.Dir, "database/codes.db"))
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (this *Manage) AddWorkdayTask(spec string, f func(m *Manage)) {
 }
 
 type ManageConfig struct {
-	Hosts    []string //服务端IP
-	Number   int      //客户端数量
-	Database string   //数据位置
+	Hosts  []string //服务端IP
+	Number int      //客户端数量
+	Dir    string   //数据位置
 }
