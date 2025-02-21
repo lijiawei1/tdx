@@ -81,7 +81,7 @@ func (this *Workday) Update() error {
 			return err
 		}
 
-		this.SessionFunc(func(session *xorm.Session) error {
+		return NewSessionFunc(this.db, func(session *xorm.Session) error {
 			for _, v := range resp.List {
 				if unix := v.Time.Unix(); unix > lastWorkday.Unix {
 					_, err = session.Insert(&WorkdayModel{Unix: unix, Date: v.Time.Format("20060102"), Is: true})
@@ -106,24 +106,6 @@ func (this *Workday) Is(t time.Time) bool {
 // TodayIs 今天是否是工作日
 func (this *Workday) TodayIs() bool {
 	return this.Is(time.Now())
-}
-
-func (this *Workday) SessionFunc(fn func(session *xorm.Session) error) error {
-	session := this.db.NewSession()
-	defer session.Close()
-	if err := session.Begin(); err != nil {
-		session.Rollback()
-		return err
-	}
-	if err := fn(session); err != nil {
-		session.Rollback()
-		return err
-	}
-	if err := session.Commit(); err != nil {
-		session.Rollback()
-		return err
-	}
-	return nil
 }
 
 // WorkdayModel 工作日

@@ -136,7 +136,7 @@ func (this *Codes) Code(byDatabase bool) ([]*CodeModel, error) {
 	}
 
 	//4. 插入或者更新数据库
-	err := this.SessionFunc(func(session *xorm.Session) error {
+	err := NewSessionFunc(this.db, func(session *xorm.Session) error {
 		for _, v := range insert {
 			if _, err := session.Insert(v); err != nil {
 				return err
@@ -157,8 +157,17 @@ func (this *Codes) Code(byDatabase bool) ([]*CodeModel, error) {
 
 }
 
-func (this *Codes) SessionFunc(fn func(session *xorm.Session) error) error {
-	session := this.db.NewSession()
+type CodeModel struct {
+	ID       int64  `json:"id"`                      //主键
+	Name     string `json:"name"`                    //名称,有时候名称会变,例STxxx
+	Code     string `json:"code" xorm:"index"`       //代码
+	Exchange string `json:"exchange" xorm:"index"`   //交易所
+	EditDate int64  `json:"editDate" xorm:"updated"` //修改时间
+	InDate   int64  `json:"inDate" xorm:"created"`   //创建时间
+}
+
+func NewSessionFunc(db *xorm.Engine, fn func(session *xorm.Session) error) error {
+	session := db.NewSession()
 	defer session.Close()
 	if err := session.Begin(); err != nil {
 		session.Rollback()
@@ -173,13 +182,4 @@ func (this *Codes) SessionFunc(fn func(session *xorm.Session) error) error {
 		return err
 	}
 	return nil
-}
-
-type CodeModel struct {
-	ID       int64  `json:"id"`                      //主键
-	Name     string `json:"name"`                    //名称,有时候名称会变,例STxxx
-	Code     string `json:"code" xorm:"index"`       //代码
-	Exchange string `json:"exchange" xorm:"index"`   //交易所
-	EditDate int64  `json:"editDate" xorm:"updated"` //修改时间
-	InDate   int64  `json:"inDate" xorm:"created"`   //创建时间
 }
