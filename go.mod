@@ -10,6 +10,7 @@ require (
 	github.com/injoyai/logs v1.0.9
 	github.com/robfig/cron/v3 v3.0.1
 	golang.org/x/text v0.16.0
+	xorm.io/core v0.7.3
 	xorm.io/xorm v1.3.9
 )
 

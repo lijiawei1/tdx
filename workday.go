@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"xorm.io/core"
 	"xorm.io/xorm"
 )
 
@@ -22,6 +23,7 @@ func NewWorkday(c *Client, filename string) (*Workday, error) {
 	if err != nil {
 		return nil, err
 	}
+	db.SetMapper(core.SameMapper{})
 	db.DB().SetMaxOpenConns(1)
 	if err := db.Sync2(new(WorkdayModel)); err != nil {
 		return nil, err

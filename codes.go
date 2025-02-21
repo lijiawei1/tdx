@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"xorm.io/core"
 	"xorm.io/xorm"
 )
 
@@ -21,6 +22,7 @@ func NewCodes(c *Client, filename string) (*Codes, error) {
 	if err != nil {
 		return nil, err
 	}
+	db.SetMapper(core.SameMapper{})
 	db.DB().SetMaxOpenConns(1)
 	if err := db.Sync2(new(CodeModel)); err != nil {
 		return nil, err
@@ -164,6 +166,10 @@ type CodeModel struct {
 	Exchange string `json:"exchange" xorm:"index"`   //交易所
 	EditDate int64  `json:"editDate" xorm:"updated"` //修改时间
 	InDate   int64  `json:"inDate" xorm:"created"`   //创建时间
+}
+
+func (c *CodeModel) TableName() string {
+	return "codes"
 }
 
 func NewSessionFunc(db *xorm.Engine, fn func(session *xorm.Session) error) error {
