@@ -4,6 +4,7 @@ import (
 	"github.com/injoyai/ios/client"
 	"github.com/robfig/cron/v3"
 	"path/filepath"
+	"time"
 )
 
 func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
@@ -28,6 +29,7 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 	if err != nil {
 		return nil, err
 	}
+	codesClient.Wait.SetTimeout(time.Second * 5)
 	codes, err := NewCodes(codesClient, filepath.Join(cfg.Database, "database/codes.db"))
 	if err != nil {
 		return nil, err
@@ -38,6 +40,7 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 	if err != nil {
 		return nil, err
 	}
+	workdayClient.Wait.SetTimeout(time.Second * 5)
 	workday, err := NewWorkday(workdayClient, filepath.Join(cfg.Database, "database/codes.db"))
 	if err != nil {
 		return nil, err
