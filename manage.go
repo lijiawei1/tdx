@@ -9,6 +9,9 @@ import (
 
 func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 	//初始化配置
+	if cfg == nil {
+		cfg = &ManageConfig{}
+	}
 	if len(cfg.Hosts) == 0 {
 		cfg.Hosts = Hosts
 	}
