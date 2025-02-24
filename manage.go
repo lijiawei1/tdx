@@ -51,6 +51,7 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 
 	return &Manage{
 		Pool:    p,
+		Config:  cfg,
 		Codes:   codes,
 		Workday: workday,
 		Cron:    cron.New(cron.WithSeconds()),
@@ -59,6 +60,7 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 
 type Manage struct {
 	*Pool
+	Config  *ManageConfig
 	Codes   *Codes
 	Workday *Workday
 	Cron    *cron.Cron
