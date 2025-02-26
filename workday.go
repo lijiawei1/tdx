@@ -4,7 +4,6 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/injoyai/base/maps"
 	"github.com/injoyai/logs"
-	"github.com/robfig/cron/v3"
 	"os"
 	"path/filepath"
 	"time"
@@ -60,6 +59,7 @@ type Workday struct {
 // Update 更新
 func (this *Workday) Update() error {
 	//获取平安银行的日K线,用作历史是否节假日的判断依据
+	//但是平安银行上市时间是1991年4月3日,交易所成立时间是1990年12月1号,会有误差
 	//判断日K线是否拉取过
 
 	//获取全部工作日
@@ -108,6 +108,21 @@ func (this *Workday) Is(t time.Time) bool {
 // TodayIs 今天是否是工作日
 func (this *Workday) TodayIs() bool {
 	return this.Is(time.Now())
+}
+
+// RangeDesc 倒序遍历工作日,从今天-1990年12月(深圳交易所成立时间)
+func (this *Workday) RangeDesc(f func(t time.Time) bool) {
+	t := IntegerDay(time.Now())
+	for ; t.Before(time.Date(1990, 12, 1, 0, 0, 0, 0, time.Local)); t = t.Add(-time.Hour * 24) {
+		if t.Weekday() == time.Saturday || t.Weekday() == time.Sunday {
+			continue
+		}
+		if this.Is(t) {
+			if !f(t) {
+				return
+			}
+		}
+	}
 }
 
 // WorkdayModel 工作日
