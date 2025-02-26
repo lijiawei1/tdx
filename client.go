@@ -38,6 +38,11 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 	return DialWith(tcp.NewDial(addr), op...)
 }
 
+// DialDefault 默认连接方式
+func DialDefault(op ...client.Option) (cli *Client, err error) {
+	return DialWith(NewHostDial(Hosts), op...)
+}
+
 // DialHosts 与服务器建立连接,多个服务器轮询,开启重试生效
 func DialHosts(hosts []string, op ...client.Option) (cli *Client, err error) {
 	return DialWith(NewHostDial(hosts), op...)
