@@ -114,9 +114,6 @@ func (this *Workday) TodayIs() bool {
 func (this *Workday) RangeDesc(f func(t time.Time) bool) {
 	t := IntegerDay(time.Now())
 	for ; t.Before(time.Date(1990, 12, 1, 0, 0, 0, 0, time.Local)); t = t.Add(-time.Hour * 24) {
-		if t.Weekday() == time.Saturday || t.Weekday() == time.Sunday {
-			continue
-		}
 		if this.Is(t) {
 			if !f(t) {
 				return
