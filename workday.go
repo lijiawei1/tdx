@@ -113,7 +113,7 @@ func (this *Workday) TodayIs() bool {
 // RangeDesc 倒序遍历工作日,从今天-1990年12月19日(上海交易所成立时间)
 func (this *Workday) RangeDesc(f func(t time.Time) bool) {
 	t := IntegerDay(time.Now())
-	for ; t.Before(time.Date(1990, 12, 1, 0, 0, 0, 0, time.Local)); t = t.Add(-time.Hour * 24) {
+	for ; t.After(time.Date(1990, 12, 18, 0, 0, 0, 0, time.Local)); t = t.Add(-time.Hour * 24) {
 		if this.Is(t) {
 			if !f(t) {
 				return
