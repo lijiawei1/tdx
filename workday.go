@@ -59,7 +59,7 @@ type Workday struct {
 
 // Update 更新
 func (this *Workday) Update() error {
-	//获取平安银行的日K线,用作历史是否节假日的判断依据
+	//获取沪市指数的日K线,用作历史是否节假日的判断依据
 	//判断日K线是否拉取过
 
 	//获取全部工作日
@@ -77,7 +77,7 @@ func (this *Workday) Update() error {
 
 	now := time.Now()
 	if lastWorkday == nil || lastWorkday.Unix < IntegerDay(now).Unix() {
-		resp, err := this.Client.GetKlineDayAll("sz000001")
+		resp, err := this.Client.GetKlineDayAll("sh000001")
 		if err != nil {
 			logs.Err(err)
 			return err
