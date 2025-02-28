@@ -110,6 +110,21 @@ func (this *Workday) TodayIs() bool {
 	return this.Is(time.Now())
 }
 
+// RangeDesc 倒序遍历工作日,从今天-1990年12月19日(上海交易所成立时间)
+func (this *Workday) RangeDesc(f func(t time.Time) bool) {
+	t := IntegerDay(time.Now())
+	for ; t.Before(time.Date(1990, 12, 1, 0, 0, 0, 0, time.Local)); t = t.Add(-time.Hour * 24) {
+		if t.Weekday() == time.Saturday || t.Weekday() == time.Sunday {
+			continue
+		}
+		if this.Is(t) {
+			if !f(t) {
+				return
+			}
+		}
+	}
+}
+
 // WorkdayModel 工作日
 type WorkdayModel struct {
 	ID   int64  `json:"id"`   //主键
