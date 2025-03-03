@@ -1,5 +1,7 @@
 package protocol
 
+import "time"
+
 const (
 	TypeConnect            = 0x000D //建立连接
 	TypeHeart              = 0x0004 //心跳
@@ -10,6 +12,11 @@ const (
 	TypeMinuteTrade        = 0x0FC5 //分时交易
 	TypeHistoryMinuteTrade = 0x0FB5 //历史分时交易
 	TypeKline              = 0x052D //K线图
+)
+
+var (
+	// ExchangeEstablish 交易所成立时间
+	ExchangeEstablish = time.Date(1990, 12, 19, 0, 0, 0, 0, time.Local)
 )
 
 /*
