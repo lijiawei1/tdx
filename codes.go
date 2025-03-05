@@ -3,7 +3,6 @@ package tdx
 import (
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx/protocol"
-	"github.com/robfig/cron/v3"
 	"os"
 	"path/filepath"
 	"time"
@@ -145,7 +144,7 @@ func (this *Codes) Code(byDatabase bool) ([]*CodeModel, error) {
 			}
 		}
 		for _, v := range update {
-			if _, err := session.Where("Code=?", v.Code).Cols("Name").Update(v); err != nil {
+			if _, err := session.Where("Exchange=? and Code=? ", v.Exchange, v.Code).Cols("Name").Update(v); err != nil {
 				return err
 			}
 		}
