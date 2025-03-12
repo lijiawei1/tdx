@@ -48,6 +48,11 @@ func DialHosts(hosts []string, op ...client.Option) (cli *Client, err error) {
 	return DialWith(NewHostDial(hosts), op...)
 }
 
+// DialHostsRandom 与服务器建立连接,多个服务器随机连接
+func DialHostsRandom(hosts []string, op ...client.Option) (cli *Client, err error) {
+	return DialWith(NewRandomDial(hosts), op...)
+}
+
 // DialWith 与服务器建立连接
 func DialWith(dial ios.DialFunc, op ...client.Option) (cli *Client, err error) {
 
