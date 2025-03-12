@@ -30,7 +30,7 @@ type Quote struct {
 	OuterDisc      int      // 外盘（东财的盘口-外盘）（和东财对不上）
 
 	ReversedBytes2 int         // 保留，未知
-	ReversedBytes3 int         // 保留，未知
+	ReversedBytes3 int         // 保留，未知,基金的昨收净值?
 	BuyLevel       PriceLevels // 5档买盘(买1-5)
 	SellLevel      PriceLevels // 5档卖盘(卖1-5)
 
