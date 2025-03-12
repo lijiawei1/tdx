@@ -233,6 +233,7 @@ func (this *Client) GetMinute(code string) (*protocol.MinuteResp, error) {
 
 // GetMinuteTrade 获取分时交易详情,服务器最多返回1800条,count-start<=1800
 func (this *Client) GetMinuteTrade(code string, start, count uint16) (*protocol.MinuteTradeResp, error) {
+	code = protocol.AddPrefix(code)
 	f, err := protocol.MMinuteTrade.Frame(code, start, count)
 	if err != nil {
 		return nil, err
@@ -267,6 +268,7 @@ func (this *Client) GetMinuteTradeAll(code string) (*protocol.MinuteTradeResp, e
 // 只能获取昨天及之前的数据,服务器最多返回2000条,count-start<=2000,如果日期输入错误,则返回0
 // 历史数据sz000001在20241116只能查到21111112,13年差几天,3141天,或者其他规则
 func (this *Client) GetHistoryMinuteTrade(date, code string, start, count uint16) (*protocol.HistoryMinuteTradeResp, error) {
+	code = protocol.AddPrefix(code)
 	f, err := protocol.MHistoryMinuteTrade.Frame(date, code, start, count)
 	if err != nil {
 		return nil, err
@@ -299,6 +301,7 @@ func (this *Client) GetHistoryMinuteTradeAll(date, code string) (*protocol.Histo
 
 // GetKline 获取k线数据,推荐收盘之后获取,否则会获取到当天的数据
 func (this *Client) GetKline(Type uint8, code string, start, count uint16) (*protocol.KlineResp, error) {
+	code = protocol.AddPrefix(code)
 	f, err := protocol.MKline.Frame(Type, code, start, count)
 	if err != nil {
 		return nil, err

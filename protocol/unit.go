@@ -50,6 +50,7 @@ func UTF8ToGBK(text []byte) []byte {
 }
 
 func DecodeCode(code string) (Exchange, string, error) {
+	code = AddPrefix(code)
 	if len(code) != 8 {
 		return 0, "", fmt.Errorf("股票代码长度错误,例如:SZ000001")
 	}
@@ -211,4 +212,19 @@ func IsStock(code string) bool {
 		return true
 	}
 	return false
+}
+
+// AddPrefix 添加股票代码前缀,针对股票生效,例如000001,会增加前缀sz000001(平安银行),而不是sh000001(上证指数)
+func AddPrefix(code string) string {
+	if len(code) == 6 {
+		switch {
+		case code[:1] == "6":
+			code = ExchangeSH.String() + code
+		case code[:1] == "0":
+			code = ExchangeSZ.String() + code
+		case code[:2] == "30":
+			code = ExchangeSZ.String() + code
+		}
+	}
+	return code
 }
