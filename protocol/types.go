@@ -60,3 +60,8 @@ const (
 	TypeKlineQuarter  uint8 = 10 // 季K 线
 	TypeKlineYear     uint8 = 11 // 年K 线
 )
+
+const (
+	KindIndex = "index"
+	KindStock = "stock"
+)
