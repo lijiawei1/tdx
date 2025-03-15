@@ -120,16 +120,22 @@ func (this *Codes) Code(byDatabase bool) ([]*CodeModel, error) {
 				if mCode[v.Code].Name != v.Name {
 					mCode[v.Code].Name = v.Name
 					update = append(update, &CodeModel{
-						Name:     v.Name,
-						Code:     v.Code,
-						Exchange: exchange.String(),
+						Name:      v.Name,
+						Code:      v.Code,
+						Exchange:  exchange.String(),
+						Multiple:  v.Multiple,
+						Decimal:   v.Decimal,
+						LastPrice: v.LastPrice,
 					})
 				}
 			} else {
 				code := &CodeModel{
-					Name:     v.Name,
-					Code:     v.Code,
-					Exchange: exchange.String(),
+					Name:      v.Name,
+					Code:      v.Code,
+					Exchange:  exchange.String(),
+					Multiple:  v.Multiple,
+					Decimal:   v.Decimal,
+					LastPrice: v.LastPrice,
 				}
 				insert = append(insert, code)
 				list = append(list, code)
@@ -160,12 +166,15 @@ func (this *Codes) Code(byDatabase bool) ([]*CodeModel, error) {
 }
 
 type CodeModel struct {
-	ID       int64  `json:"id"`                      //主键
-	Name     string `json:"name"`                    //名称,有时候名称会变,例STxxx
-	Code     string `json:"code" xorm:"index"`       //代码
-	Exchange string `json:"exchange" xorm:"index"`   //交易所
-	EditDate int64  `json:"editDate" xorm:"updated"` //修改时间
-	InDate   int64  `json:"inDate" xorm:"created"`   //创建时间
+	ID        int64   `json:"id"`                      //主键
+	Name      string  `json:"name"`                    //名称,有时候名称会变,例STxxx
+	Code      string  `json:"code" xorm:"index"`       //代码
+	Exchange  string  `json:"exchange" xorm:"index"`   //交易所
+	Multiple  uint16  `json:"multiple"`                //倍数
+	Decimal   int8    `json:"decimal"`                 //小数位
+	LastPrice float64 `json:"lastPrice"`               //昨收价格
+	EditDate  int64   `json:"editDate" xorm:"updated"` //修改时间
+	InDate    int64   `json:"inDate" xorm:"created"`   //创建时间
 }
 
 func (c *CodeModel) TableName() string {
