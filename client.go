@@ -133,6 +133,9 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 	case protocol.TypeMinute:
 		resp, err = protocol.MMinute.Decode(f.Data)
 
+	case protocol.TypeHistoryMinute:
+		resp, err = protocol.MHistoryMinute.Decode(f.Data)
+
 	case protocol.TypeMinuteTrade:
 		resp, err = protocol.MMinuteTrade.Decode(f.Data, conv.String(val))
 
@@ -223,9 +226,24 @@ func (this *Client) GetQuote(codes ...string) (protocol.QuotesResp, error) {
 	return result.(protocol.QuotesResp), nil
 }
 
-// GetMinute 获取分时数据,todo 解析好像不对
+// GetMinute 获取分时数据,todo 解析好像不对,先用历史数据
 func (this *Client) GetMinute(code string) (*protocol.MinuteResp, error) {
+	return this.GetHistoryMinute(time.Now().Format("20060102"), code)
+
 	f, err := protocol.MMinute.Frame(code)
+	if err != nil {
+		return nil, err
+	}
+	result, err := this.SendFrame(f)
+	if err != nil {
+		return nil, err
+	}
+	return result.(*protocol.MinuteResp), nil
+}
+
+// GetHistoryMinute 获取历史分时数据
+func (this *Client) GetHistoryMinute(date, code string) (*protocol.MinuteResp, error) {
+	f, err := protocol.MHistoryMinute.Frame(date, code)
 	if err != nil {
 		return nil, err
 	}
@@ -304,6 +322,20 @@ func (this *Client) GetHistoryMinuteTradeAll(date, code string) (*protocol.Histo
 	return resp, nil
 }
 
+// GetIndex 获取指数,接口是和k线一样的,但是解析不知道怎么区分(解析方式不一致),所以加一个方法
+func (this *Client) GetIndex(Type uint8, code string, start, count uint16) (*protocol.KlineResp, error) {
+	code = protocol.AddPrefix(code)
+	f, err := protocol.MKline.Frame(Type, code, start, count)
+	if err != nil {
+		return nil, err
+	}
+	result, err := this.SendFrame(f, protocol.KlineCache{Type: Type, Kind: protocol.KindIndex})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*protocol.KlineResp), nil
+}
+
 // GetKline 获取k线数据,推荐收盘之后获取,否则会获取到当天的数据
 func (this *Client) GetKline(Type uint8, code string, start, count uint16) (*protocol.KlineResp, error) {
 	code = protocol.AddPrefix(code)
@@ -311,7 +343,7 @@ func (this *Client) GetKline(Type uint8, code string, start, count uint16) (*pro
 	if err != nil {
 		return nil, err
 	}
-	result, err := this.SendFrame(f, protocol.KlineCache{Type: Type, Code: code})
+	result, err := this.SendFrame(f, protocol.KlineCache{Type: Type, Kind: protocol.KindStock})
 	if err != nil {
 		return nil, err
 	}
