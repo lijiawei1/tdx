@@ -17,7 +17,6 @@ func (this Price) Int64() int64 {
 
 func (this Price) String() string {
 	return fmt.Sprintf("%s元", FloatUnitString(this.Float64()))
-	return fmt.Sprintf("%0.3f元", this.Float64())
 }
 
 type PriceLevel struct {
