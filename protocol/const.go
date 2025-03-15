@@ -10,6 +10,7 @@ const (
 	TypeQuote              = 0x053E //行情信息
 	TypeMinute             = 0x051D //分时数据
 	TypeMinuteTrade        = 0x0FC5 //分时交易
+	TypeHistoryMinute      = 0x0FB4 //历史分时数据
 	TypeHistoryMinuteTrade = 0x0FB5 //历史分时交易
 	TypeKline              = 0x052D //K线图
 )
