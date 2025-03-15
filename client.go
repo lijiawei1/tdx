@@ -336,6 +336,46 @@ func (this *Client) GetIndex(Type uint8, code string, start, count uint16) (*pro
 	return result.(*protocol.KlineResp), nil
 }
 
+// GetIndexUntil 获取指数k线数据，通过多次请求来拼接,直到满足func返回true
+func (this *Client) GetIndexUntil(Type uint8, code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	resp := &protocol.KlineResp{}
+	size := uint16(800)
+	var last *protocol.Kline
+	for start := uint16(0); ; start += size {
+		r, err := this.GetKline(Type, code, start, size)
+		if err != nil {
+			return nil, err
+		}
+		if last != nil && len(r.List) > 0 {
+			last.Last = r.List[len(r.List)-1].Close
+		}
+		if len(r.List) > 0 {
+			last = r.List[0]
+		}
+		for i := len(r.List) - 1; i >= 0; i-- {
+			if f(r.List[i]) {
+				resp.Count += r.Count - uint16(i)
+				resp.List = append(r.List[i:], resp.List...)
+				return resp, nil
+			}
+		}
+		resp.Count += r.Count
+		resp.List = append(r.List, resp.List...)
+		if r.Count < size {
+			break
+		}
+	}
+	return resp, nil
+}
+
+func (this *Client) GetIndexDay(code string, start, count uint16) (*protocol.KlineResp, error) {
+	return this.GetIndex(protocol.TypeKlineDay, code, start, count)
+}
+
+func (this *Client) GetIndexDayUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
+	return this.GetIndexUntil(protocol.TypeKlineDay, code, f)
+}
+
 // GetKline 获取k线数据,推荐收盘之后获取,否则会获取到当天的数据
 func (this *Client) GetKline(Type uint8, code string, start, count uint16) (*protocol.KlineResp, error) {
 	code = protocol.AddPrefix(code)
