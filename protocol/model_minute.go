@@ -2,6 +2,8 @@ package protocol
 
 import (
 	"errors"
+	"fmt"
+	"time"
 )
 
 type MinuteResp struct {
@@ -10,8 +12,13 @@ type MinuteResp struct {
 }
 
 type PriceNumber struct {
+	Time   string
 	Price  Price
 	Number int
+}
+
+func (this PriceNumber) String() string {
+	return fmt.Sprintf("%s \t%-6s \t%-6d(手)", this.Time, this.Price, this.Number)
 }
 
 type minute struct{}
@@ -43,12 +50,17 @@ func (this *minute) Decode(bs []byte) (*MinuteResp, error) {
 	bs = bs[6:]
 	price := Price(0)
 
+	t := time.Date(0, 0, 0, 9, 0, 0, 0, time.Local)
 	for i := uint16(0); i < resp.Count; i++ {
 		bs, price = GetPrice(bs)
 		bs, _ = CutInt(bs) //这个是什么
 		var number int
 		bs, number = CutInt(bs)
+		if i == 120 {
+			t = t.Add(time.Hour * 2)
+		}
 		resp.List = append(resp.List, PriceNumber{
+			Time:   t.Add(time.Minute * time.Duration(i)).Format("15:04"),
 			Price:  price,
 			Number: number,
 		})
