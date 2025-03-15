@@ -11,6 +11,7 @@ var (
 	MQuote              = quote{}
 	MCode               = code{}
 	MMinute             = minute{}
+	MHistoryMinute      = historyMinute{}
 	MMinuteTrade        = minuteTrade{}
 	MHistoryMinuteTrade = historyMinuteTrade{}
 	MKline              = kline{}
