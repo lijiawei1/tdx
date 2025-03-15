@@ -15,7 +15,7 @@ type MinuteTrade struct {
 	Time   string //时间
 	Price  Price  //价格
 	Volume int    //成交量
-	Number int    //单数,历史数据改字段无效
+	Number int    //单数,历史数据该字段无效
 	Status int    //0是买，1是卖，2无效（汇总出现）
 }
 
@@ -103,7 +103,7 @@ func (minuteTrade) Decode(bs []byte, code string) (*MinuteTradeResp, error) {
 		}
 		var sub Price
 		bs, sub = GetPrice(bs[2:])
-		lastPrice += sub
+		lastPrice += sub * 10 //把分转换成厘
 		mt.Price = lastPrice / basePrice(code)
 		bs, mt.Volume = CutInt(bs)
 		bs, mt.Number = CutInt(bs)

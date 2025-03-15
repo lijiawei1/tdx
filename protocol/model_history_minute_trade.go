@@ -25,7 +25,7 @@ func (this *HistoryMinuteTrade) String() string {
 
 // Amount 成交额
 func (this *HistoryMinuteTrade) Amount() Price {
-	return this.Price * Price(this.Volume) * 100
+	return this.Price * Price(this.Volume*100)
 }
 
 func (this *HistoryMinuteTrade) StatusString() string {
@@ -82,7 +82,7 @@ func (historyMinuteTrade) Decode(bs []byte, code string) (*HistoryMinuteTradeRes
 		}
 		var sub Price
 		bs, sub = GetPrice(bs[2:])
-		lastPrice += sub
+		lastPrice += sub * 10 //把分转成厘
 		mt.Price = lastPrice / basePrice(number)
 		bs, mt.Volume = CutInt(bs)
 		bs, mt.Status = CutInt(bs)
