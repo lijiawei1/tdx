@@ -8,7 +8,7 @@ import (
 
 func main() {
 	common.Test(func(c *tdx.Client) {
-		resp, err := c.GetKlineDayAll("sz000001")
+		resp, err := c.GetKlineDayAll("sz159558")
 		logs.PanicErr(err)
 
 		for _, v := range resp.List {
