@@ -4,11 +4,19 @@ import (
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx/protocol"
 	"github.com/robfig/cron/v3"
+	"math"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 	"xorm.io/core"
 	"xorm.io/xorm"
+)
+
+// 增加单例,部分数据需要通过Codes里面的信息计算
+var (
+	DefaultCodes *Codes
+	codesOnce    sync.Once
 )
 
 func NewCodes(c *Client, filename string) (*Codes, error) {
@@ -26,6 +34,21 @@ func NewCodes(c *Client, filename string) (*Codes, error) {
 	db.DB().SetMaxOpenConns(1)
 	if err := db.Sync2(new(CodeModel)); err != nil {
 		return nil, err
+	}
+	if err := db.Sync2(new(UpdateModel)); err != nil {
+		return nil, err
+	}
+
+	update := new(UpdateModel)
+	{ //插入一条数据
+		has, err := db.Get(update)
+		if err != nil {
+			return nil, err
+		} else if !has {
+			if _, err := db.Insert(update); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	cc := &Codes{
@@ -47,7 +70,10 @@ func NewCodes(c *Client, filename string) (*Codes, error) {
 	})
 	task.Start()
 
-	return cc, cc.Update()
+	//判断是否更新过,更新过则不更新
+	//time.Unix(update.Time,0).A
+
+	return cc, cc.Update(true)
 }
 
 type Codes struct {
@@ -75,8 +101,15 @@ func (this *Codes) GetStocks() []string {
 	return ls
 }
 
-func (this *Codes) Update() error {
-	codes, err := this.Code(false)
+func (this *Codes) Get(code string) *CodeModel {
+	if v, ok := this.Codes[code]; ok {
+		return v
+	}
+	return nil
+}
+
+func (this *Codes) Update(byCache ...bool) error {
+	codes, err := this.Code(len(byCache) > 0 && byCache[0])
 	if err != nil {
 		return err
 	}
@@ -165,6 +198,14 @@ func (this *Codes) Code(byDatabase bool) ([]*CodeModel, error) {
 
 }
 
+type UpdateModel struct {
+	Time int64 //更新时间
+}
+
+func (*UpdateModel) TableName() string {
+	return "update"
+}
+
 type CodeModel struct {
 	ID        int64   `json:"id"`                      //主键
 	Name      string  `json:"name"`                    //名称,有时候名称会变,例STxxx
@@ -177,8 +218,12 @@ type CodeModel struct {
 	InDate    int64   `json:"inDate" xorm:"created"`   //创建时间
 }
 
-func (c *CodeModel) TableName() string {
+func (*CodeModel) TableName() string {
 	return "codes"
+}
+
+func (this *CodeModel) Price(p protocol.Price) protocol.Price {
+	return p * protocol.Price(math.Pow10(int(3-this.Decimal)))
 }
 
 func NewSessionFunc(db *xorm.Engine, fn func(session *xorm.Session) error) error {

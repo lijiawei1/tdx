@@ -1,6 +1,7 @@
 package tdx
 
 import (
+	"errors"
 	"fmt"
 	"github.com/injoyai/base/maps"
 	"github.com/injoyai/base/maps/wait/v2"
@@ -85,7 +86,17 @@ func DialWith(dial ios.DialFunc, op ...client.Option) (cli *Client, err error) {
 
 	go cli.Client.Run()
 
-	return cli, nil
+	/*
+		部分接口需要通过代码信息计算得出
+	*/
+	codesOnce.Do(func() {
+		//初始化代码管理
+		if DefaultCodes == nil {
+			DefaultCodes, err = NewCodes(cli, "./codes.db")
+		}
+	})
+
+	return cli, err
 }
 
 type Client struct {
@@ -215,6 +226,9 @@ func (this *Client) GetCodeAll(exchange protocol.Exchange) (*protocol.CodeResp, 
 
 // GetQuote 获取盘口五档报价
 func (this *Client) GetQuote(codes ...string) (protocol.QuotesResp, error) {
+	if DefaultCodes == nil {
+		return nil, errors.New("DefaultCodes未初始化")
+	}
 	f, err := protocol.MQuote.Frame(codes...)
 	if err != nil {
 		return nil, err
@@ -223,7 +237,31 @@ func (this *Client) GetQuote(codes ...string) (protocol.QuotesResp, error) {
 	if err != nil {
 		return nil, err
 	}
-	return result.(protocol.QuotesResp), nil
+	quotes := result.(protocol.QuotesResp)
+
+	{ //临时处理下先,后续优化
+		//判断长度和预期是否一致
+		if len(quotes) != len(codes) {
+			return nil, fmt.Errorf("预期%d个，实际%d个", len(codes), len(quotes))
+		}
+		if DefaultCodes == nil {
+			return nil, errors.New("DefaultCodes未初始化")
+		}
+		for i, code := range codes {
+			m := DefaultCodes.Get(code)
+			if m == nil {
+				return nil, fmt.Errorf("未查询到代码[%s]相关信息", code)
+			}
+			for ii, v := range quotes[i].SellLevel {
+				quotes[i].SellLevel[ii].Price = m.Price(v.Price)
+			}
+			for ii, v := range quotes[i].BuyLevel {
+				quotes[i].BuyLevel[ii].Price = m.Price(v.Price)
+			}
+		}
+	}
+
+	return quotes, nil
 }
 
 // GetMinute 获取分时数据,todo 解析好像不对,先用历史数据
