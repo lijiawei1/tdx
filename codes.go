@@ -125,7 +125,7 @@ func (this *Codes) Get(code string) *CodeModel {
 }
 
 func (this *Codes) Update(byCache ...bool) error {
-	codes, err := this.Code(len(byCache) > 0 && byCache[0])
+	codes, err := this.GetCodes(len(byCache) > 0 && byCache[0])
 	if err != nil {
 		return err
 	}
@@ -139,8 +139,8 @@ func (this *Codes) Update(byCache ...bool) error {
 	return err
 }
 
-// Code 更新股票并返回结果
-func (this *Codes) Code(byDatabase bool) ([]*CodeModel, error) {
+// GetCodes 更新股票并返回结果
+func (this *Codes) GetCodes(byDatabase bool) ([]*CodeModel, error) {
 
 	//2. 查询数据库所有股票
 	list := []*CodeModel(nil)
