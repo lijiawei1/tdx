@@ -239,7 +239,7 @@ func (this *Client) GetQuote(codes ...string) (protocol.QuotesResp, error) {
 	}
 	quotes := result.(protocol.QuotesResp)
 
-	{ //临时处理下先,后续优化
+	{ //todo 临时处理下先,后续优化,感觉有问题
 		//判断长度和预期是否一致
 		if len(quotes) != len(codes) {
 			return nil, fmt.Errorf("预期%d个，实际%d个", len(codes), len(quotes))
@@ -257,6 +257,13 @@ func (this *Client) GetQuote(codes ...string) (protocol.QuotesResp, error) {
 			}
 			for ii, v := range quotes[i].BuyLevel {
 				quotes[i].BuyLevel[ii].Price = m.Price(v.Price)
+			}
+			quotes[i].K = protocol.K{
+				Last:  m.Price(quotes[i].K.Last),
+				Open:  m.Price(quotes[i].K.Open),
+				High:  m.Price(quotes[i].K.High),
+				Low:   m.Price(quotes[i].K.Low),
+				Close: m.Price(quotes[i].K.Close),
 			}
 		}
 	}
@@ -360,6 +367,12 @@ func (this *Client) GetHistoryMinuteTradeAll(date, code string) (*protocol.Histo
 	return resp, nil
 }
 
+/*
+
+
+
+ */
+
 // GetIndex 获取指数,接口是和k线一样的,但是解析不知道怎么区分(解析方式不一致),所以加一个方法
 func (this *Client) GetIndex(Type uint8, code string, start, count uint16) (*protocol.KlineResp, error) {
 	code = protocol.AddPrefix(code)
@@ -380,7 +393,7 @@ func (this *Client) GetIndexUntil(Type uint8, code string, f func(k *protocol.Kl
 	size := uint16(800)
 	var last *protocol.Kline
 	for start := uint16(0); ; start += size {
-		r, err := this.GetKline(Type, code, start, size)
+		r, err := this.GetIndex(Type, code, start, size)
 		if err != nil {
 			return nil, err
 		}
@@ -406,6 +419,11 @@ func (this *Client) GetIndexUntil(Type uint8, code string, f func(k *protocol.Kl
 	return resp, nil
 }
 
+// GetIndexAll 获取全部k线数据
+func (this *Client) GetIndexAll(Type uint8, code string) (*protocol.KlineResp, error) {
+	return this.GetIndexUntil(Type, code, func(k *protocol.Kline) bool { return false })
+}
+
 func (this *Client) GetIndexDay(code string, start, count uint16) (*protocol.KlineResp, error) {
 	return this.GetIndex(protocol.TypeKlineDay, code, start, count)
 }
@@ -413,6 +431,31 @@ func (this *Client) GetIndexDay(code string, start, count uint16) (*protocol.Kli
 func (this *Client) GetIndexDayUntil(code string, f func(k *protocol.Kline) bool) (*protocol.KlineResp, error) {
 	return this.GetIndexUntil(protocol.TypeKlineDay, code, f)
 }
+
+func (this *Client) GetIndexDayAll(code string) (*protocol.KlineResp, error) {
+	return this.GetIndexAll(protocol.TypeKlineDay, code)
+}
+
+func (this *Client) GetIndexWeekAll(code string) (*protocol.KlineResp, error) {
+	return this.GetIndexAll(protocol.TypeKlineWeek, code)
+}
+
+func (this *Client) GetIndexMonthAll(code string) (*protocol.KlineResp, error) {
+	return this.GetIndexAll(protocol.TypeKlineMonth, code)
+}
+
+func (this *Client) GetIndexQuarterAll(code string) (*protocol.KlineResp, error) {
+	return this.GetIndexAll(protocol.TypeKlineQuarter, code)
+}
+
+func (this *Client) GetIndexYearAll(code string) (*protocol.KlineResp, error) {
+	return this.GetIndexAll(protocol.TypeKlineYear, code)
+}
+
+/*
+
+
+ */
 
 // GetKline 获取k线数据,推荐收盘之后获取,否则会获取到当天的数据
 func (this *Client) GetKline(Type uint8, code string, start, count uint16) (*protocol.KlineResp, error) {
@@ -462,27 +505,7 @@ func (this *Client) GetKlineUntil(Type uint8, code string, f func(k *protocol.Kl
 
 // GetKlineAll 获取全部k线数据
 func (this *Client) GetKlineAll(Type uint8, code string) (*protocol.KlineResp, error) {
-	resp := &protocol.KlineResp{}
-	size := uint16(800)
-	var last *protocol.Kline
-	for start := uint16(0); ; start += size {
-		r, err := this.GetKline(Type, code, start, size)
-		if err != nil {
-			return nil, err
-		}
-		if last != nil && len(r.List) > 0 {
-			last.Last = r.List[len(r.List)-1].Close
-		}
-		if len(r.List) > 0 {
-			last = r.List[0]
-		}
-		resp.Count += r.Count
-		resp.List = append(r.List, resp.List...)
-		if r.Count < size {
-			break
-		}
-	}
-	return resp, nil
+	return this.GetKlineUntil(Type, code, func(k *protocol.Kline) bool { return false })
 }
 
 // GetKlineMinute 获取一分钟k线数据,每次最多800条,最多只能获取24000条数据
