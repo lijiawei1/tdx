@@ -40,7 +40,7 @@ func NewCodes(c *Client, filename string) (*Codes, error) {
 	}
 
 	update := new(UpdateModel)
-	{ //插入一条数据
+	{ //查询或者插入一条数据
 		has, err := db.Get(update)
 		if err != nil {
 			return nil, err
@@ -57,22 +57,38 @@ func NewCodes(c *Client, filename string) (*Codes, error) {
 		Codes:  nil,
 	}
 
-	//设置定时器,每天早上9点更新数据
-	task := cron.New(cron.WithSeconds())
-	task.AddFunc("0 0 9 * * *", func() {
-		for i := 0; i < 3; i++ {
-			if err := cc.Update(); err == nil {
-				return
+	{ //设置定时器,每天早上9点更新数据
+		task := cron.New(cron.WithSeconds())
+		task.AddFunc("0 0 9 * * *", func() {
+			for i := 0; i < 3; i++ {
+				if err := cc.Update(); err == nil {
+					return
+				}
+				logs.Err(err)
+				<-time.After(time.Minute * 5)
 			}
-			logs.Err(err)
-			<-time.After(time.Minute * 5)
+		})
+		task.Start()
+	}
+
+	{ //判断是否更新过,更新过则不更新
+		now := time.Now()
+		node := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.Local)
+		updateTime := time.Unix(update.Time, 0)
+		if now.Sub(node) > 0 {
+			//当前时间在9点之后,且更新时间在9点之前,需要更新
+			if updateTime.Sub(node) < 0 {
+				return cc, cc.Update()
+			}
+		} else {
+			//当前时间在9点之前,且更新时间在上个节点之前
+			if updateTime.Sub(node.Add(time.Hour*24)) < 0 {
+				return cc, cc.Update()
+			}
 		}
-	})
-	task.Start()
+	}
 
-	//判断是否更新过,更新过则不更新
-	//time.Unix(update.Time,0).A
-
+	//从缓存中加载
 	return cc, cc.Update(true)
 }
 
@@ -109,7 +125,7 @@ func (this *Codes) Get(code string) *CodeModel {
 }
 
 func (this *Codes) Update(byCache ...bool) error {
-	codes, err := this.Code(len(byCache) > 0 && byCache[0])
+	codes, err := this.GetCodes(len(byCache) > 0 && byCache[0])
 	if err != nil {
 		return err
 	}
@@ -118,11 +134,13 @@ func (this *Codes) Update(byCache ...bool) error {
 		codeMap[code.Exchange+code.Code] = code
 	}
 	this.Codes = codeMap
-	return nil
+	//更新时间
+	_, err = this.db.Update(&UpdateModel{Time: time.Now().Unix()})
+	return err
 }
 
-// Code 更新股票并返回结果
-func (this *Codes) Code(byDatabase bool) ([]*CodeModel, error) {
+// GetCodes 更新股票并返回结果
+func (this *Codes) GetCodes(byDatabase bool) ([]*CodeModel, error) {
 
 	//2. 查询数据库所有股票
 	list := []*CodeModel(nil)
