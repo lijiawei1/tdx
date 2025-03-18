@@ -24,7 +24,7 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 
 	//代码
 	DefaultCodes = &Codes{}
-	codesClient, err := DialHostsRandom(cfg.Hosts, op...)
+	codesClient, err := DialHostsRange(cfg.Hosts, op...)
 	if err != nil {
 		return nil, err
 	}
@@ -37,14 +37,14 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 
 	//连接池
 	p, err := NewPool(func() (*Client, error) {
-		return DialHosts(cfg.Hosts, op...)
+		return DialHostsRange(cfg.Hosts, op...)
 	}, cfg.Number)
 	if err != nil {
 		return nil, err
 	}
 
 	//工作日
-	workdayClient, err := DialHosts(cfg.Hosts, op...)
+	workdayClient, err := DialHostsRange(cfg.Hosts, op...)
 	if err != nil {
 		return nil, err
 	}
