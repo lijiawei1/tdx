@@ -3,12 +3,20 @@ package tdx
 import (
 	"context"
 	"github.com/injoyai/ios"
+	"github.com/injoyai/ios/module/tcp"
 	"github.com/injoyai/logs"
 	"math/rand"
 	"net"
 	"strings"
 	"time"
 )
+
+func NewTCPDial(addr string) ios.DialFunc {
+	if !strings.Contains(addr, ":") {
+		addr += ":7709"
+	}
+	return tcp.NewDial(addr)
+}
 
 func NewHostDial(hosts []string) ios.DialFunc {
 	if len(hosts) == 0 {
