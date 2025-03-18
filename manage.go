@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+const (
+	DefaultDatabaseDir = "./data/database"
+)
+
 func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 	//初始化配置
 	if cfg == nil {
@@ -16,10 +20,10 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 		cfg.Hosts = Hosts
 	}
 	if cfg.CodesDir == "" {
-		cfg.CodesDir = "./data/database"
+		cfg.CodesDir = DefaultDatabaseDir
 	}
 	if cfg.WorkdayDir == "" {
-		cfg.WorkdayDir = "./data/database"
+		cfg.WorkdayDir = DefaultDatabaseDir
 	}
 
 	//代码

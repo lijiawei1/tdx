@@ -5,6 +5,7 @@ import (
 	"github.com/injoyai/base/safe"
 )
 
+// NewPool 简易版本的连接池
 func NewPool(dial func() (*Client, error), number int) (*Pool, error) {
 	if number <= 0 {
 		number = 1
