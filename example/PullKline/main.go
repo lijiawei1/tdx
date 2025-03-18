@@ -12,7 +12,7 @@ func main() {
 	m, err := tdx.NewManage(nil)
 	logs.PanicErr(err)
 
-	err = extend.NewPullKline([]string{"sz000001"}, []string{"year"}, "./", 1).Run(context.Background(), m)
+	err = extend.NewPullKline([]string{"sz000001"}, []string{"year"}, "./data/database/kline", 1).Run(context.Background(), m)
 	logs.PanicErr(err)
 
 }
