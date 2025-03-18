@@ -54,7 +54,6 @@ func NewCodes(c *Client, filename string) (*Codes, error) {
 	cc := &Codes{
 		Client: c,
 		db:     db,
-		Codes:  nil,
 	}
 
 	{ //设置定时器,每天早上9点更新数据
@@ -93,47 +92,81 @@ func NewCodes(c *Client, filename string) (*Codes, error) {
 }
 
 type Codes struct {
-	*Client                       //客户端
-	db      *xorm.Engine          //数据库实例
-	Codes   map[string]*CodeModel //股票缓存
+	*Client                         //客户端
+	db        *xorm.Engine          //数据库实例
+	Map       map[string]*CodeModel //股票缓存
+	list      []*CodeModel          //列表方式缓存
+	exchanges map[string]string     //交易所缓存
 }
 
 // GetName 获取股票名称
 func (this *Codes) GetName(code string) string {
-	if v, ok := this.Codes[code]; ok {
+	if v, ok := this.Map[code]; ok {
 		return v.Name
 	}
 	return "未知"
 }
 
 // GetStocks 获取股票代码,sh6xxx sz0xx sz30xx
-func (this *Codes) GetStocks() []string {
+func (this *Codes) GetStocks(limit ...int) []string {
 	ls := []string(nil)
-	for k, _ := range this.Codes {
-		if protocol.IsStock(k) {
-			ls = append(ls, k)
+	for _, m := range this.list {
+		code := m.FullCode()
+		if protocol.IsStock(code) {
+			ls = append(ls, code)
+		}
+		if len(limit) > 0 && len(ls) >= limit[0] {
+			break
 		}
 	}
 	return ls
 }
 
 func (this *Codes) Get(code string) *CodeModel {
-	if v, ok := this.Codes[code]; ok {
-		return v
-	}
-	return nil
+	return this.Map[code]
 }
 
-func (this *Codes) Update(byCache ...bool) error {
-	codes, err := this.GetCodes(len(byCache) > 0 && byCache[0])
+// GetExchange 获取股票交易所,这里的参数不需要带前缀
+func (this *Codes) GetExchange(code string) protocol.Exchange {
+	if len(code) == 6 {
+		switch {
+		case code[:1] == "6":
+			return protocol.ExchangeSH
+		case code[:1] == "0":
+			return protocol.ExchangeSZ
+		case code[:2] == "30":
+			return protocol.ExchangeSZ
+		}
+	}
+	exchange := this.exchanges[code]
+	if len(code) == 8 {
+		exchange = code[0:2]
+	}
+	switch exchange {
+	case protocol.ExchangeSH.String():
+		return protocol.ExchangeSH
+	case protocol.ExchangeSZ.String():
+		return protocol.ExchangeSZ
+	default:
+		return protocol.ExchangeSH
+	}
+}
+
+// Update 更新数据,从服务器或者数据库
+func (this *Codes) Update(byDB ...bool) error {
+	codes, err := this.GetCodes(len(byDB) > 0 && byDB[0])
 	if err != nil {
 		return err
 	}
 	codeMap := make(map[string]*CodeModel)
+	exchanges := make(map[string]string)
 	for _, code := range codes {
 		codeMap[code.Exchange+code.Code] = code
+		exchanges[code.Code] = code.Exchange
 	}
-	this.Codes = codeMap
+	this.Map = codeMap
+	this.list = codes
+	this.exchanges = exchanges
 	//更新时间
 	_, err = this.db.Update(&UpdateModel{Time: time.Now().Unix()})
 	return err
@@ -202,7 +235,7 @@ func (this *Codes) GetCodes(byDatabase bool) ([]*CodeModel, error) {
 			}
 		}
 		for _, v := range update {
-			if _, err := session.Where("Exchange=? and Code=? ", v.Exchange, v.Code).Cols("Name").Update(v); err != nil {
+			if _, err := session.Where("Exchange=? and Code=? ", v.Exchange, v.Code).Cols("Name,LastPrice").Update(v); err != nil {
 				return err
 			}
 		}
@@ -238,6 +271,10 @@ type CodeModel struct {
 
 func (*CodeModel) TableName() string {
 	return "codes"
+}
+
+func (this *CodeModel) FullCode() string {
+	return this.Exchange + this.Code
 }
 
 func (this *CodeModel) Price(p protocol.Price) protocol.Price {
