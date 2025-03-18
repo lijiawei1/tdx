@@ -22,21 +22,23 @@ func NewManage(cfg *ManageConfig, op ...client.Option) (*Manage, error) {
 		cfg.WorkdayDir = "./data/database"
 	}
 
-	//连接池
-	p, err := NewPool(func() (*Client, error) {
-		return DialHosts(cfg.Hosts, op...)
-	}, cfg.Number)
-	if err != nil {
-		return nil, err
-	}
-
 	//代码
-	codesClient, err := DialHosts(cfg.Hosts, op...)
+	DefaultCodes = &Codes{}
+	codesClient, err := DialHostsRandom(cfg.Hosts, op...)
 	if err != nil {
 		return nil, err
 	}
 	codesClient.Wait.SetTimeout(time.Second * 5)
 	codes, err := NewCodes(codesClient, filepath.Join(cfg.CodesDir, "codes.db"))
+	if err != nil {
+		return nil, err
+	}
+	DefaultCodes = codes
+
+	//连接池
+	p, err := NewPool(func() (*Client, error) {
+		return DialHosts(cfg.Hosts, op...)
+	}, cfg.Number)
 	if err != nil {
 		return nil, err
 	}

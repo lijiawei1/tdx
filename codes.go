@@ -1,6 +1,7 @@
 package tdx
 
 import (
+	"github.com/injoyai/conv"
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx/protocol"
 	"github.com/robfig/cron/v3"
@@ -108,14 +109,15 @@ func (this *Codes) GetName(code string) string {
 }
 
 // GetStocks 获取股票代码,sh6xxx sz0xx sz30xx
-func (this *Codes) GetStocks(limit ...int) []string {
+func (this *Codes) GetStocks(limits ...int) []string {
+	limit := conv.DefaultInt(-1, limits...)
 	ls := []string(nil)
 	for _, m := range this.list {
 		code := m.FullCode()
 		if protocol.IsStock(code) {
 			ls = append(ls, code)
 		}
-		if len(limit) > 0 && len(ls) >= limit[0] {
+		if limit > 0 && len(ls) >= limit {
 			break
 		}
 	}
