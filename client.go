@@ -8,11 +8,9 @@ import (
 	"github.com/injoyai/conv"
 	"github.com/injoyai/ios"
 	"github.com/injoyai/ios/client"
-	"github.com/injoyai/ios/module/tcp"
 	"github.com/injoyai/logs"
 	"github.com/injoyai/tdx/protocol"
 	"runtime/debug"
-	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -31,17 +29,14 @@ func WithRedial(b ...bool) client.Option {
 	}
 }
 
-// Dial 与服务器建立连接
-func Dial(addr string, op ...client.Option) (cli *Client, err error) {
-	if !strings.Contains(addr, ":") {
-		addr += ":7709"
-	}
-	return DialWith(tcp.NewDial(addr), op...)
-}
-
 // DialDefault 默认连接方式
 func DialDefault(op ...client.Option) (cli *Client, err error) {
 	return DialHostsRange(Hosts, op...)
+}
+
+// Dial 与服务器建立连接
+func Dial(addr string, op ...client.Option) (cli *Client, err error) {
+	return DialWith(NewTCPDial(addr), op...)
 }
 
 // DialHosts 与服务器建立连接,多个服务器轮询,开启重试生效
