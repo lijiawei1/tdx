@@ -3,6 +3,7 @@ package tdx
 import (
 	"context"
 	"github.com/injoyai/ios"
+	"github.com/injoyai/logs"
 	"math/rand"
 	"net"
 	"strings"
@@ -41,5 +42,27 @@ func NewRandomDial(hosts []string) ios.DialFunc {
 		}
 		c, err := net.Dial("tcp", addr)
 		return c, addr, err
+	}
+}
+
+func NewRangeDial(hosts []string) ios.DialFunc {
+	if len(hosts) == 0 {
+		hosts = Hosts
+	}
+	return func(ctx context.Context) (c ios.ReadWriteCloser, _ string, err error) {
+		for i, addr := range hosts {
+			if !strings.Contains(addr, ":") {
+				addr += ":7709"
+			}
+			c, err = net.Dial("tcp", addr)
+			if err == nil {
+				return c, addr, nil
+			}
+			if i < len(hosts)-1 {
+				//最后一个错误返回出去
+				logs.Err(err)
+			}
+		}
+		return
 	}
 }
