@@ -51,6 +51,11 @@ func NewRangeDial(hosts []string) ios.DialFunc {
 	}
 	return func(ctx context.Context) (c ios.ReadWriteCloser, _ string, err error) {
 		for i, addr := range hosts {
+			select {
+			case <-ctx.Done():
+				return nil, "", ctx.Err()
+			default:
+			}
 			if !strings.Contains(addr, ":") {
 				addr += ":7709"
 			}
