@@ -41,7 +41,7 @@ func Dial(addr string, op ...client.Option) (cli *Client, err error) {
 
 // DialDefault 默认连接方式
 func DialDefault(op ...client.Option) (cli *Client, err error) {
-	return DialWith(NewHostDial(Hosts), op...)
+	return DialHostsRange(Hosts, op...)
 }
 
 // DialHosts 与服务器建立连接,多个服务器轮询,开启重试生效
@@ -52,6 +52,11 @@ func DialHosts(hosts []string, op ...client.Option) (cli *Client, err error) {
 // DialHostsRandom 与服务器建立连接,多个服务器随机连接
 func DialHostsRandom(hosts []string, op ...client.Option) (cli *Client, err error) {
 	return DialWith(NewRandomDial(hosts), op...)
+}
+
+// DialHostsRange 遍历设置的服务地址进行连接,成功则结束遍历
+func DialHostsRange(hosts []string, op ...client.Option) (cli *Client, err error) {
+	return DialWith(NewRangeDial(hosts), op...)
 }
 
 // DialWith 与服务器建立连接
